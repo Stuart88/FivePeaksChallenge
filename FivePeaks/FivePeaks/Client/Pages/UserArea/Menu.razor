@@ -7,32 +7,42 @@
         <td valign="middle" align="center">
 
             @if ((LoggedIn || FivePeaks.Client.Helpers.SessionState.UserLoggedIn) && UserAccount != null)
-            {
-                <div class="fully-centred full-page-width" style="max-width: 400px">
-                    <div style="text-align: center">
-                        <h3>User Area</h3>
-                        <h5>Hello, @UserAccount.Username!</h5>
-                        <br />
-                        <br />
-                    </div>
-                    @switch (SelectedMenuOption)
-                    {
-                        case MenuOption.Profile:
-                            <Profile User="UserAccount" BackToMenu="BackToMenu" />
-                            break;
-                        case MenuOption.SubmitData:
-                            break;
-                        default:
-                            <div class="menu-button">
-                                <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Profile))">Profile</Button>
-                            </div>
-                            <div class="menu-button">
-                                <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.SubmitData))">Submit Route Data</Button>
-                            </div>
-                            break;
-                    }
+                {
+            <div class="full-page-width" style="max-width: 400px; padding:10px">
+                <div style="text-align: center">
+                    <h3>User Area</h3>
+                    <h5>Hello, @UserAccount.Username!</h5>
+                    <br />
+                    <br />
                 </div>
-            }
+                @switch (SelectedMenuOption)
+                        {
+                            case MenuOption.Profile:
+                <Profile User="UserAccount" BackToMenu="BackToMenu" />
+                                break;
+
+                            case MenuOption.SubmitData:
+                <SubmitRoute User="UserAccount" BackToMenu="BackToMenu" OnItemSaved="GoToSubmissions" />
+                                break;
+
+                            case MenuOption.Submissions:
+                <Submissions User="UserAccount" BackToMenu="BackToMenu" />
+                                break;
+
+                            default:
+                <div class="menu-button">
+                    <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Profile))">Profile</Button>
+                </div>
+                <div class="menu-button">
+                    <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.SubmitData))">Submit Route Data</Button>
+                </div>
+                <div class="menu-button">
+                    <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Submissions))">My Submissions</Button>
+                </div>
+                                break;
+                        }
+            </div>
+                }
 
             <LoginComponent ShowLogout="true" OnLogin="OnLoggedIn" OnLogout="OnLoggedOut" Hidden="SelectedMenuOption != MenuOption.None" />
 
@@ -73,11 +83,17 @@
         this.StateHasChanged();
     }
 
+    void GoToSubmissions()
+    {
+        SetMenuOption(MenuOption.Submissions);
+    }
+
     private enum MenuOption
     {
         None,
         Profile,
-        SubmitData
+        SubmitData,
+        Submissions
     }
 
 }

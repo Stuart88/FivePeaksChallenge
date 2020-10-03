@@ -1,0 +1,47 @@
+﻿@using FivePeaks.Shared.Models
+
+
+<div style="width: 100%;display: flex; flex-wrap: wrap;">
+    @foreach (UserAccount u in Tags.Where(t => !string.IsNullOrEmpty(t.Username)))
+    {
+        <table style="margin:5px">
+            <tr>
+                <td class="blog-tag">@u.Username</td>
+
+                @if (ReadOnly)
+                {
+                    <!--Don't show delete button-->
+                }
+                else if (ThisUser.Id == u.Id)
+                {
+                    <Tooltip Text="Cannot remove yourself!" Placement="Placement.Top">
+                        <td><span class="hover-pointer" style="color: white; background: red; font-size: 18px">❌</span></td>
+                    </Tooltip>
+                }
+                else
+                {
+                    <td><span class="hover-pointer" style="color: white; background: red; font-size: 18px" @onclick="@(e => RemoveTrekkerClicked(u))">❌</span></td>
+                }
+            </tr>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public UserAccount ThisUser { get; set; }
+
+    [Parameter]
+    public List<UserAccount> Tags { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    [Parameter]
+    public Action<UserAccount> OnRemoveTag { get; set; }
+
+    private void RemoveTrekkerClicked(UserAccount tag)
+    {
+        OnRemoveTag?.Invoke(tag);
+    }
+}

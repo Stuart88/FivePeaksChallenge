@@ -1,0 +1,382 @@
+﻿@using FivePeaks.Shared.Models
+@using Blazorise.Components
+@using System.IO
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+@try
+{
+    <div style="text-align: left; padding: 10px 10px 100px 10px; max-width: 400px">
+        <Field>
+            <FieldLabel Style="font-weight: bold">Entry Name</FieldLabel>
+            <TextEdit Placeholder="Entry Name" @bind-Text="@Item.EntryName" Disabled="@(_saving || _readOnly)">
+                <FieldHelp>A personal name to represent yourself or the group you went with</FieldHelp>
+            </TextEdit>
+        </Field>
+        <Field>
+            <FieldLabel Style="font-weight: bold">Trek Date</FieldLabel>
+            <DateEdit TValue="DateTime" @bind-Date="@Item.TrekDate" Disabled="@(_saving || _readOnly)">
+                <FieldHelp>@Item.Season</FieldHelp>
+            </DateEdit>
+        </Field>
+        <Fields>
+            <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                <FieldLabel Style="font-weight: bold">Start Time</FieldLabel>
+                <TimeEdit TValue="TimeSpan" @bind-Time="@StartTimeSpan" Disabled="@(_saving || _readOnly)"/>
+            </Field>
+            <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                <FieldLabel Style="font-weight: bold">Finish Time</FieldLabel>
+                <TimeEdit TValue="TimeSpan" @bind-Time="@FinishTimeSpan" Disabled="@(_saving || _readOnly)"/>
+            </Field>
+        </Fields>
+        <Field>
+            <FieldLabel Style="font-weight: bold">Direction</FieldLabel>
+            <Select TValue="int" @bind-SelectedValue="@_selectedDirection" Disabled="@(_saving || _readOnly)">
+                <SelectItem Value="@((int) TrekDirection.Unknown)">-</SelectItem>
+                <SelectItem Value="@((int) TrekDirection.Clockwise)">Clockwise</SelectItem>
+                <SelectItem Value="@((int) TrekDirection.Anticlockwise)">Anticlockwise</SelectItem>
+            </Select>
+        </Field>
+        <Field>
+            <FieldLabel Style="font-weight: bold">Party Size</FieldLabel>
+            <Select TValue="int" @bind-SelectedValue="@Item.PartySize" Disabled="@(_saving || _readOnly)">
+                @for (int i = 1; i < 41; i++)
+                {
+                    int num = i;
+                    <SelectItem Value="@(num)">@num</SelectItem>
+                }
+            </Select>
+            <FieldHelp>How many people completed the trek with you?</FieldHelp>
+        </Field>
+        <Field>
+
+            <FieldLabel Style="font-weight: bold">Website members</FieldLabel>
+
+            <FieldHelp>If any other registered users from this site joined you, include them here so that this entry will also show up on their profile.</FieldHelp>
+
+            <Autocomplete Disabled="@(_saving || _readOnly)"
+                          Data="@_trekkers"
+                          TextField="@((item) => item.Username)"
+                          ValueField="@((item) => item)"
+                          SelectedValue="@_selectedTrekker"
+                          SelectedValueChanged="@(OnTrekkerSelected)"
+                          Placeholder="Search usernames">
+                Users
+            </Autocomplete>
+            <br/>
+            <SelectedTrekkersList Tags="@_selectedTrekkers" ThisUser="@User" OnRemoveTag="@OnRemoveTrekker" ReadOnly="_readOnly"/>
+            <br/>
+
+        </Field>
+        <Field>
+            <FieldLabel Style="font-weight: bold">Route Data</FieldLabel>
+            @if (_readOnly)
+            {
+                if (!string.IsNullOrEmpty(Item.RouteDataType))
+                {
+                    <div style="font-style: italic">@Item.RouteDataType file submitted</div>
+                }
+            }
+            else
+            {
+                <FileEdit Filter=".gpx, .tcx" Disabled="@(_saving || _readOnly)" Changed="@OnChanged" Written="@OnWritten" Progressed="@OnProgressed">
+                    <FieldHelp>Accepts GPX or TCX data</FieldHelp>
+                </FileEdit>
+                <FieldHelp>(Not Required) Route data will help with verifying your submission</FieldHelp>
+            }
+        </Field>
+        @if (_routeDataFileName.Length > 0)
+        {
+            <table style="margin: 0 0 15px 5px">
+                <tr>
+                    <td class="blog-tag">@_routeDataFileName</td>
+
+                    <td><span class="hover-pointer" style="color: white; background: red; font-size: 18px" @onclick="@RemoveSelectedFile">❌</span></td>
+                </tr>
+            </table>
+        }
+        <Field>
+            <FieldLabel Style="font-weight: bold">Extra Verification</FieldLabel>
+
+            <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.SubmissionNotes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
+
+            <FieldHelp>Add any other details or links to social media, photo albums, blogs etc which may help to verify your submission</FieldHelp>
+        </Field>
+        <Field>
+            <FieldLabel Style="font-weight: bold">Notes</FieldLabel>
+            <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.Notes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
+            <FieldHelp>Got any extra comments? Add them here.</FieldHelp>
+        </Field>
+
+        <table style="width: 100%; margin-top: 50px;" hidden="@_readOnly">
+            <tr>
+                <td width="25%"><Button Color="Color.Danger" style="width: 100%" Disabled="@_saving" @onclick="@CancelBtnClicked">Cancel</Button></td>
+                <td width="75%"><Button Color="Color.Primary" style="width: 100%" Disabled="@_saving" @onclick="@SubmitItem">Save</Button></td>
+            </tr>
+        </table>
+
+        <br/>
+
+        <img hidden="@(!_saving)" style="width: 100px; height: 100px; align-self: center" src="images/icons/loading.gif"/>
+
+        @if (_responseMsg.Contains("\n"))
+        {
+            <ul>
+
+                @foreach (string s in _responseMsg.Split("\n").Where(n => !string.IsNullOrEmpty(n)))
+                {
+                    <li style="color: red">@s</li>
+                }
+
+            </ul>
+        }
+        else
+        {
+            <div style="color: red">@_responseMsg</div>
+        }
+    </div>
+}
+catch (Exception e)
+{
+    _responseMsg = e.Message;
+    this.StateHasChanged();
+}
+
+@code {
+
+    [Parameter]
+    public LeaderboardItem LeaderboardItemParam { get; set; } = new LeaderboardItem();
+
+    [Parameter]
+    public UserAccount User { get; set; }
+
+    [Parameter]
+    public Action BackToMenu { get; set; }
+
+    [Parameter]
+    public Action OnItemSaved { get; set; }
+
+    LeaderboardItem Item { get; set; } = new LeaderboardItem();
+
+    private string _responseMsg = "";
+    int _selectedDirection = (int)TrekDirection.Unknown;
+    string _partySize = "";
+    private bool _saving;
+    private bool _readOnly;
+    private List<UserAccount> _trekkers = new List<UserAccount>();
+    private List<UserAccount> _selectedTrekkers = new List<UserAccount>();
+    object _selectedTrekker = null;
+    string _routeDataFileName = "";
+    TimeSpan StartTimeSpan { get; set; }
+    TimeSpan FinishTimeSpan { get; set; }
+
+    void OnTrekkerSelected(object u)
+    {
+        if (u is UserAccount userAccount)
+        {
+            if (_selectedTrekkers.All(t => t.Id != userAccount.Id))
+            {
+                _selectedTrekkers.Add(userAccount);
+            }
+
+            this.StateHasChanged();
+        }
+    }
+    void OnRemoveTrekker(UserAccount u)
+    {
+        if (u != null)
+        {
+            _selectedTrekkers.Remove(u);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void SubmitItem()
+    {
+        _saving = true;
+        this.StateHasChanged();
+
+        Item.PostedByUserId = User.Id;
+        Item.Direction = (TrekDirection)_selectedDirection;
+        Item.StartTime = new DateTime().AddTicks(StartTimeSpan.Ticks);
+        Item.FinishTime = new DateTime().AddTicks(FinishTimeSpan.Ticks);
+        Item.TrekDate = Item.TrekDate.Date;
+        Item.SeasonComplete = Item.Season;
+
+        bool valid = Validate();
+
+        if (valid)
+        {
+            Item.TrekkerIDs = string.Join(",", _selectedTrekkers.Select(s => s.Id.ToString()));
+
+            Helpers.HttpPostHelper<object> req = new Helpers.HttpPostHelper<object>("Leaderboard/UpdateItem", Item);
+
+            BasicHttpResponse<object> resp = await req.SendAsync<object>(Http);
+
+            if (resp.Ok)
+            {
+                OnItemSaved?.Invoke();
+            }
+            else
+            {
+                _responseMsg = resp.Message;
+            }
+
+        }
+
+        _saving = false;
+        this.StateHasChanged();
+    }
+
+    private bool Validate()
+    {
+        string msg = "";
+
+        if (string.IsNullOrEmpty(Item.EntryName))
+            msg += "Entry must have a name\n";
+
+        if (Item.TrekDate > DateTime.Now)
+            msg += "Invalid Trek Date\n";
+
+        if (Item.StartTime > Item.FinishTime)
+            msg += "Start time must be earlier than finish time\n";
+
+        else if (Item.FinishTime - Item.StartTime < TimeSpan.FromHours(1))
+            msg += "Check start and finish times\n";
+
+        if (Item.Direction == TrekDirection.Unknown)
+            msg += "Please select a trek direction\n";
+
+        if (_selectedTrekkers.Count == 0)
+            msg += "Please add at least one member to the list of trekkers\n";
+
+        _responseMsg = msg;
+
+        this.StateHasChanged();
+
+
+        return msg.Length == 0;
+    }
+
+    private void CancelBtnClicked()
+    {
+        this.BackToMenu?.Invoke();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (LeaderboardItemParam != null && LeaderboardItemParam.Id > 0)
+            {
+                _readOnly = true;
+                Item = LeaderboardItemParam;
+            }
+            else
+            {
+                _selectedTrekkers.Add(new UserAccount {Id = User.Id, Username = User.Username});
+            }
+
+            await GetUsernames();
+            await base.OnInitializedAsync();
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetUsernames()
+    {
+        try
+        {
+            _responseMsg = "";
+
+            BasicHttpResponse<List<UserAccount>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<UserAccount>>>($"Leaderboard/GetAllUsernames");
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                _trekkers.AddRange(resp.Data);
+                if (_readOnly && !string.IsNullOrEmpty(Item.TrekkerIDs))
+                {
+                    //Readonly mode but still need to populate the selected trekkers part via the IDs from the item,
+                    var ids = Item.TrekkerIDs.Split(",").Where(i => !string.IsNullOrEmpty(i)).Select(s => int.Parse(s)).ToList();
+                    _selectedTrekkers = _trekkers.Where(t => ids.Contains(t.Id)).ToList();
+                }
+                this.StateHasChanged();
+            }
+            else
+                throw new Exception(resp.Message);
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+    string fileContent;
+
+    async Task OnChanged(FileChangedEventArgs e)
+    {
+        try
+        {
+            var file = e.Files[0];
+
+            string fileExtenstion = Path.GetExtension(file.Name);
+
+            _routeDataFileName = file.Name;
+
+            if (fileExtenstion == ".gpx" || fileExtenstion == ".tcx")
+            {
+                // A stream is going to be the destination stream we're writing to.
+                await using var stream = new MemoryStream();
+
+                // Here we're telling the FileEdit where to write the upload result
+                await file.WriteToStreamAsync(stream);
+
+                // Once we reach this line it means the file is fully uploaded.
+                // In this case we're going to offset to the beginning of file
+                // so we can read it.
+                stream.Seek(0, SeekOrigin.Begin);
+
+                // Use the stream reader to read the content of uploaded file,
+                // in this case we can assume it is a textual file.
+                using var reader = new StreamReader(stream);
+                Item.RouteData = await reader.ReadToEndAsync();
+                Item.RouteDataType = fileExtenstion;
+            }
+
+
+        }
+        catch (Exception exc)
+        {
+            Console.WriteLine(exc.Message);
+        }
+        finally
+        {
+            this.StateHasChanged();
+        }
+    }
+
+    void OnWritten(FileWrittenEventArgs e)
+    {
+        //Console.WriteLine( $"File: {e.File.Name} Position: {e.Position} Data: {Convert.ToBase64String( e.Data )}" );
+    }
+
+    void OnProgressed(FileProgressedEventArgs e)
+    {
+        //Console.WriteLine( $"File: {e.File.Name} Progress: {e.Percentage}" );
+    }
+
+    private void RemoveSelectedFile()
+    {
+        _routeDataFileName = "";
+        Item.RouteData = "";
+        Item.RouteDataType = "";
+        this.StateHasChanged();
+    }
+
+}

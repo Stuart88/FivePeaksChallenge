@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FivePeaks.Shared.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,5 @@ namespace FivePeaks.Client.Helpers
                 ? $"Site/GetImageCompressed/{System.Web.HttpUtility.UrlEncode(filePath)}"
                 : $"Site/GetImage/{System.Web.HttpUtility.UrlEncode(filePath)}";
         }
-
     }
 }

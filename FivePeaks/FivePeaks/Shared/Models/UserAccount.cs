@@ -19,5 +19,7 @@ namespace FivePeaks.Shared.Models
 
         [Column("LastLogin")] public DateTime LastLogin { get; set; } = DateTime.Now;
 
+        [Ignore]
+        List<LeaderboardItem> TrekEntries { get; set; }
     }
 }

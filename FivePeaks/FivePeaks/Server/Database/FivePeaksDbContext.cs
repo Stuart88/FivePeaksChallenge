@@ -12,6 +12,7 @@ namespace FivePeaks.Server.Database
         public DbSet<BlogPost> Blogs { get; set; }
         public DbSet<AdminUser> Admins { get; set; }
         public DbSet<UserAccount> Users { get; set; }
+        public DbSet<LeaderboardItem> Leaderboard { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=fivepeaks.db");
@@ -21,6 +22,7 @@ namespace FivePeaks.Server.Database
             modelBuilder.Entity<BlogPost>().ToTable("Blogs");
             modelBuilder.Entity<AdminUser>().ToTable("Admins");
             modelBuilder.Entity<UserAccount>().ToTable("UserAccounts");
+            modelBuilder.Entity<LeaderboardItem>().ToTable("Leaderboard");
         }
     }
 }

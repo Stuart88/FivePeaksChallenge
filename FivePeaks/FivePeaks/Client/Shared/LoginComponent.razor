@@ -1,7 +1,11 @@
 ﻿@using FivePeaks.Shared.Models
+@using FivePeaks.Client.Helpers
 @inject HttpClient Http
 
-<div class="fully-centred full-page-width" style="max-width: 400px" hidden="@Hidden">
+<div class="fully-centred full-page-width" style="max-width: 400px;padding:10px" hidden="@Hidden">
+
+
+    
 
     @if (showLoader)
     {
@@ -13,6 +17,16 @@
     {
         if (!FivePeaks.Client.Helpers.SessionState.UserLoggedIn)
         {
+            <img style="max-height:100px; max-width: 100px;margin:auto;margin-bottom:50px" src="@ServerHelpers.ImageSrcString("icons/logo.png")" />
+
+            <div>
+                Login to the user area to submit your own Five Peaks Challenge details for the leaderboard
+            </div>
+
+            <br />
+            <br />
+            <br />
+
             <Button Color="Color.Primary" Clicked="@SubmitLogin">Login</Button>
         }
         else if (ShowLogout)

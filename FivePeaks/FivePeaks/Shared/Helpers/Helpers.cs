@@ -20,6 +20,7 @@ namespace FivePeaks.Shared.Helpers
         };
     }
 
+   
     public static class Functions
     {
         public static string MakeUrlSafe(string s)
@@ -33,5 +34,13 @@ namespace FivePeaks.Shared.Helpers
                 .Replace(")", "-")
             );
         }
+
+        public static string ExceptionMessage(Exception e)
+        {
+            return e.InnerException != null
+                ? $"{e.Message}. Inner Exception: {e.InnerException.Message}"
+                : e.Message;
+        }
+
     }
 }

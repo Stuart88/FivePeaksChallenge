@@ -1,0 +1,171 @@
+﻿@using FivePeaks.Shared.Models
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime;
+
+<div style="padding: 5px">
+
+    <h3>Submissions</h3>
+
+    <table style="width: 100%">
+        <tr>
+            <th>Submission</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+        @if (SubmissionsList.Count > 0)
+        {
+            foreach (var item in SubmissionsList)
+            {
+                <tr>
+                    <td>
+                        <div>
+                            @item.EntryName
+                        </div>
+                        <div style="font-size:12px; color: gray;margin-left:2px; font-style: italic;margin-bottom:5px">
+                            @item.PostDate.ToString("ddd-MM-yyyy")
+                        </div>
+                    </td>
+                    <td>
+                        @StatusEnumString(item.Status)
+                    </td>
+                    <td>
+                        <Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@(e => ShowModal(item))">View</Button>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4" style="font-style: italic">No Data!</td>
+            </tr>
+        }
+    </table>
+
+    <br />
+    <br />
+    <br />
+
+    <div style="max-width:200px; margin: auto;">
+        <Button Color="Color.Danger" style="width: 100%" @onclick="@CancelBtnClicked">Back</Button>
+    </div>
+    
+    <br />
+    <br />
+    <br />
+</div>
+
+<Modal @ref="_modalRef">
+    <ModalBackdrop />
+    @if (SelectedItem != null)
+    {
+        <ModalContent IsCentered="true" Size="ModalSize.ExtraLarge">
+            <ModalHeader>
+            
+                @if (SelectedItem.Status != LeaderboardEntryState.Accepted)
+                {
+                    <Button Color="Color.Danger" Size="ButtonSize.Large" @onclick="@(e => DeleteItem(SelectedItem.Id))">Delete</Button>
+                }
+                <CloseButton Clicked="@HideModal"/>
+            </ModalHeader>
+            <ModalBody>
+                <SubmitRoute LeaderboardItemParam="SelectedItem" User="@User"/>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+            </ModalFooter>
+        </ModalContent>
+    }
+</Modal>
+
+
+@code{
+
+    [Parameter]
+    public UserAccount User { get; set; }
+
+    [Parameter]
+    public Action BackToMenu { get; set; }
+
+    LeaderboardItem SelectedItem { get; set; }
+
+    private string _responseMsg = "";
+    List<LeaderboardItem> SubmissionsList { get; set; } = new List<LeaderboardItem>();
+    private Modal _modalRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSubmissions();
+        await base.OnInitializedAsync();
+    }
+
+    private void CancelBtnClicked()
+    {
+        this.BackToMenu?.Invoke();
+    }
+
+    private void HideModal()
+    {
+        _modalRef.Hide();
+    }
+    private void ShowModal(LeaderboardItem item)
+    {
+        SelectedItem = item;
+        this.StateHasChanged();
+        _modalRef.Show();
+    }
+
+    async void DeleteItem(int id)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+
+        if (confirmed)
+        {
+            BasicHttpResponse<object> resp = await Http.GetFromJsonAsync<BasicHttpResponse<object>>($"Leaderboard/DeleteItem/{id}");
+
+            if (resp.Ok)
+            {
+                SubmissionsList.Remove(SubmissionsList.FirstOrDefault(b => b.Id == id));
+                SelectedItem = null;
+                this.StateHasChanged();
+                HideModal();
+            }
+        }
+    }
+
+    private string StatusEnumString(LeaderboardEntryState s)
+    {
+        return s switch
+        {
+            LeaderboardEntryState.Pending => "Pending",
+            LeaderboardEntryState.Rejected => "Rejected",
+            LeaderboardEntryState.NeedMoreInfo => "Needs Info",
+            LeaderboardEntryState.Accepted => "Accepted"
+        };
+    }
+
+    private async Task GetSubmissions()
+    {
+        try
+        {
+            _responseMsg = "";
+
+            BasicHttpResponse<List<LeaderboardItem>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<LeaderboardItem>>>($"Leaderboard/GetSubmissions/{User.Id}");
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                SubmissionsList = resp.Data;
+                this.StateHasChanged();
+            }
+            else
+                throw new Exception(resp.Message);
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+}

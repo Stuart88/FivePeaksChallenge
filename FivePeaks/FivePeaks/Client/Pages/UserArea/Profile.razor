@@ -28,6 +28,7 @@
     private string _username = "";
     private bool _saving = false;
 
+
     protected override void OnInitialized()
     {
         this._username = User.Username;
@@ -36,6 +37,7 @@
 
     private void CancelBtnClicked()
     {
+        this._username = User.Username;
         this.BackToMenu?.Invoke();
     }
 

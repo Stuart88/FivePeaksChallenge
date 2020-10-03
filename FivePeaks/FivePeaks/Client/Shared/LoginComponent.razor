@@ -1,0 +1,133 @@
+﻿
+
+<div class="fully-centred full-page-width centred-item-admin" style="max-width: 400px">
+
+    @if (showLoader)
+    {
+        <div style="margin:auto; display: flex; justify-content: center; flex-direction: column; align-items: center;">
+            <img style="width: 100px; height: 100px; align-self: center" src="/images/icons/loading.gif"/>
+        </div>
+    }
+    else
+    {
+        if (!FivePeaks.Client.Helpers.SessionState.UserLoggedIn)
+        {
+            <Button Color="Color.Primary" Clicked="@SubmitLogin">Login</Button>
+        }
+        else if (ShowLogout)
+        {
+            <Button Color="Color.Primary" Clicked="@SubmitLogout">Logout</Button>
+        }
+    }
+
+    <br />
+    <div style="color:goldenrod">@_responseMsg</div>
+</div>
+
+@code {
+
+    [Parameter] public bool ShowLogout { get; set; }
+    [Parameter] public Action OnLogin { get; set; }
+    [Parameter] public Action OnLogout { get; set; }
+
+    string _username;
+    string _password;
+    bool _loggedIn;
+    static string _responseMsg = "";
+    private static Action<bool> loginResultAction;
+    private static Action<bool> logoutResultAction;
+    public bool showLoader = true;
+
+    [Inject]
+    IJSRuntime ThisJsRuntime { get; set; }
+
+    protected override void OnInitialized()
+    {
+        loginResultAction = LoginComplete;
+        logoutResultAction = LogoutComplete;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await ThisJsRuntime.InvokeVoidAsync("isUserFBLoggedIn");
+            }
+            catch (Exception e)
+            {
+                _responseMsg = e.Message;
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task SubmitLogin()
+    {
+        try
+        {
+            showLoader = true;
+            this.StateHasChanged();
+            await ThisJsRuntime.InvokeVoidAsync("fbLogin");
+            _responseMsg = "";
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+    private async Task SubmitLogout()
+    {
+        try
+        {
+            showLoader = true;
+            this.StateHasChanged();
+            await ThisJsRuntime.InvokeVoidAsync("fbLogout");
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+    [JSInvokable]
+    public static void LoginResult(bool loggedin)
+    {
+        loginResultAction.Invoke(loggedin);
+    }
+
+    [JSInvokable]
+    public static void LogoutResult(bool loggedin)
+    {
+        logoutResultAction.Invoke(loggedin);
+    }
+
+    private void LoginComplete(bool loggedIn)
+    {
+
+        if (loggedIn)
+        {
+            Helpers.SessionState.UserLoggedIn = true;
+            this.OnLogin?.Invoke();
+            _responseMsg = "";
+        }
+
+        showLoader = false;
+        this.StateHasChanged();
+    }
+
+    private void LogoutComplete(bool success)
+    {
+        if (success)
+        {
+            Helpers.SessionState.UserLoggedIn = false;
+            this.OnLogout?.Invoke();
+            _responseMsg = "";
+        }
+
+        showLoader = false;
+        this.StateHasChanged();
+    }
+}

@@ -45,7 +45,7 @@
         <meta name="copyright" content="Five Peaks Challenge" />
         <meta name="application-name" content="Five Peaks Challenge" />
 
-        <!--<meta property="fb:app_id" content="423472821732462" />-->
+        <meta property="fb:app_id" content="2852016631566500" />
         <meta property="og:image:height" content="890" />
         <meta property="og:image:width" content="902" />
         <meta property="og:image:type" content="image/png" />
@@ -96,122 +96,125 @@
     </head>
 
     <body>
-        <app>
-            <div style="width: 100vw; height: 100vh; display: flex; justify-content: center; flex-direction: column; align-items: center;">
+    
+    <!--Facebook App stuff - FB says to add it just after <body> tag, so it's here! -->
+    <script src="scripts/facebook.js"></script>
+    @*<div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v8.0&appId=2386518895007514&autoLogAppEvents=1" nonce="D3OTLFdV"></script>*@
 
-                <img style="max-height:100px;max-width:100px" src="/images-compressed/icons/logo.jpg" />
-                <br />
-                <img style="width: 100px; height: 100px; align-self: center" src="/images/icons/loading.gif" />
-                <div style="text-align: center; margin-top: 15px; align-self: center">
-                    Five Peaks Loading
-                </div>
+    <app>
+        <div style="width: 100vw; height: 100vh; display: flex; justify-content: center; flex-direction: column; align-items: center;">
 
+            <img style="max-height: 100px; max-width: 100px" src="/images-compressed/icons/logo.jpg"/>
+            <br/>
+            <img style="width: 100px; height: 100px; align-self: center" src="/images/icons/loading.gif"/>
+            <div style="text-align: center; margin-top: 15px; align-self: center">
+                Five Peaks Loading
             </div>
 
-        </app>
+        </div>
 
-        <!-- inside of body section and after the <app> tag  -->
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    </app>
 
-        <script src="_content/Blazorise/blazorise.js"></script>
-        <script src="_content/Blazorise.Bootstrap/blazorise.bootstrap.js"></script>
-        <script src="_content/BlazorPro.BlazorSize/blazorSize.min.js"></script>
-        <script src="_content/Blazor-Analytics/blazor-analytics.js"></script>
+    <!-- inside of body section and after the <app> tag  -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
-        <!--Leaflet, OS Maps-->
-        <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
-        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-                integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-                crossorigin=""></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.min.js"></script>
+    <script src="_content/Blazorise/blazorise.js"></script>
+    <script src="_content/Blazorise.Bootstrap/blazorise.bootstrap.js"></script>
+    <script src="_content/BlazorPro.BlazorSize/blazorSize.min.js"></script>
+    <script src="_content/Blazor-Analytics/blazor-analytics.js"></script>
 
-        <script src="scripts/route.js"></script>
+    <!--Leaflet, OS Maps-->
+    <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.min.js"></script>
 
-        <script src="scripts/osmap.js"></script>
+    <script src="scripts/route.js"></script>
 
-        <!-- Quill Editor -->
-        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="scripts/osmap.js"></script>
 
-        <script>
+    <!-- Quill Editor -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-            window.downloadRouteData = function (fileType) {
-                var link = document.createElement('a');
-                link.href = `/Site/GetRouteData/${this.encodeURIComponent(fileType)}`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+    <script>
 
-            window.toggleWeatherWidget = function (show) {
+        window.downloadRouteData = function(fileType) {
+            var link = document.createElement('a');
+            link.href = `/Site/GetRouteData/${this.encodeURIComponent(fileType)}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
-                let weatherWidgetHTML = document.getElementById("weather-widget").innerHTML;
+        window.toggleWeatherWidget = function(show) {
 
-                let widgetArea = document.getElementById("widget-area");
+            let weatherWidgetHTML = document.getElementById("weather-widget").innerHTML;
 
-                widgetArea.innerHTML = weatherWidgetHTML;
+            let widgetArea = document.getElementById("widget-area");
 
-            }
+            widgetArea.innerHTML = weatherWidgetHTML;
 
-            var quill;
+        }
 
-            window.prepareEditor = function () {
-                var toolbarOptions = [
-                    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-                    ['blockquote', 'code-block'],
+        var quill;
 
-                    [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
-                    [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
-                    /*[{ 'direction': 'rtl' }], */                        // text direction
+        window.prepareEditor = function() {
+            var toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }], // custom button values
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'script': 'sub' }, { 'script': 'super' }], // superscript/subscript
+                [{ 'indent': '-1' }, { 'indent': '+1' }], // outdent/indent
+                /*[{ 'direction': 'rtl' }], */ // text direction
+                [{ 'size': ['small', false, 'large', 'huge'] }], // custom dropdown
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                ['link', 'image' /*, 'video', 'formula'*/], // add's image support
+                [{ 'color': [] }, { 'background': [] }], // dropdown with defaults from theme
+                //[{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean'] // remove formatting button
+            ];
 
-                    [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    ['link', 'image'/*, 'video', 'formula'*/],          // add's image support
-                    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-                    //[{ 'font': [] }],
-                    [{ 'align': [] }],
-
-                    ['clean']                                         // remove formatting button
-                ];
-
-                quill = new Quill('#quill-editor', {
+            quill = new Quill('#quill-editor',
+                {
                     modules: {
                         toolbar: toolbarOptions
                     },
 
                     theme: 'snow'
                 });
-            }
+        }
 
-            window.getEditorText = function () {
-                return quill.root.innerHTML;
-            }
+        window.getEditorText = function() {
+            return quill.root.innerHTML;
+        }
 
-            window.setEditorText = function (text) {
-                quill.root.innerHTML = text;
-            }
+        window.setEditorText = function(text) {
+            quill.root.innerHTML = text;
+        }
 
 
+    </script>
 
-        </script>
-
-        <div id="hidey-div" style="z-index:-10; position: absolute; top: 0;display:none">
-            <div id="weather-widget">
-                <a href="https://www.metoffice.gov.uk/public/weather/mountain-forecasts/yorkshire-dales" class="metoffice-mountain-forecast" data-theme="dark">Yorkshire Dales Mountain Forecast</a>
-                <script type="text/javascript" src="//www.metoffice.gov.uk/public/pws/components/mountain/loader.js"></script>
-            </div>
+    <div id="hidey-div" style="z-index: -10; position: absolute; top: 0; display: none">
+        <div id="weather-widget">
+            <a href="https://www.metoffice.gov.uk/public/weather/mountain-forecasts/yorkshire-dales" class="metoffice-mountain-forecast" data-theme="dark">Yorkshire Dales Mountain Forecast</a>
+            <script type="text/javascript" src="//www.metoffice.gov.uk/public/pws/components/mountain/loader.js"></script>
         </div>
+    </div>
 
-        <div id="blazor-error-ui">
-            An unhandled error has occurred.
-            <a href="" class="reload">Reload</a>
-            <a class="dismiss">🗙</a>
-        </div>
-        <script src="_framework/blazor.webassembly.js"></script>
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
     </body>
 
 </html>

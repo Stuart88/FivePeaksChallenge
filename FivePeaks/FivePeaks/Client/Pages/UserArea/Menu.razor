@@ -1,0 +1,33 @@
+﻿@page "/account/menu"
+@page "/account"
+@inject NavigationManager NavigationManager
+
+
+@if (LoggedIn || FivePeaks.Client.Helpers.SessionState.UserLoggedIn)
+{
+    <div class="fully-centred full-page-width centred-item-admin" style="max-width: 400px">
+        MENU HERE!
+    </div>
+}
+
+<LoginComponent ShowLogout="true" OnLogin="OnLoggedIn" OnLogout="OnLoggedOut" />
+
+
+@code{
+
+    private bool LoggedIn { get; set; }
+
+    public void OnLoggedIn()
+    {
+        this.LoggedIn = true;
+        this.StateHasChanged();
+    }
+
+    public void OnLoggedOut()
+    {
+        NavigationManager.NavigateTo("/");
+        this.LoggedIn = false;
+        this.StateHasChanged();
+    }
+}
+

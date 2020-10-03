@@ -17,7 +17,7 @@
             foreach (var item in SubmissionsList)
             {
                 <tr>
-                    <td>
+                    <td valign="middle">
                         <div>
                             @item.EntryName
                         </div>
@@ -25,10 +25,10 @@
                             @item.PostDate.ToString("ddd-MM-yyyy")
                         </div>
                     </td>
-                    <td>
+                    <td valign="middle">
                         @StatusEnumString(item.Status)
                     </td>
-                    <td>
+                    <td valign="middle">
                         <Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@(e => ShowModal(item))">View</Button>
                     </td>
                 </tr>
@@ -61,14 +61,23 @@
     {
         <ModalContent IsCentered="true" Size="ModalSize.ExtraLarge">
             <ModalHeader>
-            
-                @if (SelectedItem.Status != LeaderboardEntryState.Accepted)
-                {
-                    <Button Color="Color.Danger" Size="ButtonSize.Large" @onclick="@(e => DeleteItem(SelectedItem.Id))">Delete</Button>
-                }
                 <CloseButton Clicked="@HideModal"/>
             </ModalHeader>
             <ModalBody>
+                @if (SelectedItem.Status != LeaderboardEntryState.Accepted)
+                {
+                    <div style="margin:auto; max-width: 400px; text-align: center;">
+                        To prevent tampering during the verification process, you cannot edit a submission once it has been created
+                        <br />
+                        <br />
+                        If you want to make changes, please delete this entry and submit a new one.
+                        <br/>
+                        <br/>
+                        <div style="margin: auto; display: inline-block;">
+                            <Button Color="Color.Danger" Size="ButtonSize.Small" @onclick="@(e => DeleteItem(SelectedItem.Id))">Delete</Button>
+                        </div>
+                    </div>
+                }
                 <SubmitRoute LeaderboardItemParam="SelectedItem" User="@User"/>
             </ModalBody>
             <ModalFooter>

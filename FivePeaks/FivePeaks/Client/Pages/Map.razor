@@ -1,0 +1,143 @@
+﻿
+
+@page "/maps/{LatLong}"
+@page "/maps"
+
+@using FivePeaks.Client.Helpers
+
+<PageBase ImageNum="2">
+
+    <Tabs SelectedTab="@_selectedTab" SelectedTabChanged="@OnSelectedTabChanged">
+        <Items>
+            <Tab Name="online">Online</Tab>
+            <Tab Name="osmap">Paper</Tab>
+            <Tab Name="gps">GPS</Tab>
+        </Items>
+        <Content>
+            <TabPanel Name="online">
+                <div id="map-frame" class="map-frame">
+                    <div style="font-size: 32px; position: absolute;top:4px;left:4px;"><b>Loading...</b></div>
+                </div>
+                @*<div class="map-frame">
+                        <div style="font-size:32px"><b>Loading...</b></div>
+                        <iframe class="responsive-iframe" src="https://www.google.com/maps/d/u/0/embed?mid=1NyGWdTKvKwBzLbv1OGE7HoclnLz4a_FX"></iframe>
+                    </div>*@
+            </TabPanel>
+            <TabPanel Name="osmap">
+                <div class="white-opaque-box info-area-min-width mobile-scroller">
+
+                    <h1 class="page-title">Ordnance Survey Maps</h1>
+
+                    <Divider></Divider>
+
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md">
+
+                                <br />
+                                <span style="background-color: lightgrey; color: black; font-weight: bold">You will need to purchase OS Explorer Map OL 19 if you wish to figure out the route yourself.</span>
+                                <br />
+                                <br />
+                                <span style="background-color: lightgrey; color: black; font-weight: bold">Please ensure you are skilled in map reading before attempting this challenge. Attempting this challenge without a map (or tracked GPS device) is dangerous! </span>
+
+                            </div>
+                            <div class="col-md">
+
+                                <img class="img-fluid" style="max-height: calc(100vh / 2)" src="@ServerHelpers.ImageSrcString("osmap/osmap.jpg")" />
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <br />
+                    <img class="img-fluid" style="max-height:calc(100vh / 2)" src="@ServerHelpers.ImageSrcString("osmap/osmap-route.jpg")" />
+
+                </div>
+            </TabPanel>
+            <TabPanel Name="gps">
+                <div style="min-height: calc(100vh - 200px); text-align:center" class="white-opaque-box info-area-min-width mobile-scroller">
+
+                    <h1 id="route-data" class="page-title">Route Data</h1>
+
+                    <Divider></Divider>
+
+                    <div style="max-width: 500px;text-align: left; bapadding:5px">
+
+                        <p>
+                            There are hundreds of different apps available all using different file types, so you will have to check which file will work in your chosen app before downloading.
+                        </p>
+                        <p>
+                            Select the file type to work in your tracked GPS app below
+                        </p>
+
+                        <Table Hoverable="true" Borderless="true">
+                            @if (!ScreenSizeHelper.IsSmallScreen)
+                            {
+                                <TableHeader ThemeContrast="ThemeContrast.Light">
+                                    <TableRow>
+                                        <TableHeaderCell>Type</TableHeaderCell>
+                                        <TableHeaderCell>File</TableHeaderCell>
+                                    </TableRow>
+                                </TableHeader>
+                            }
+                            <TableBody>
+                                @foreach (string s in _fileTypes)
+                                {
+                                    <TableRow>
+                                        @if (!ScreenSizeHelper.IsSmallScreen)
+                                        {
+                                            <TableRowHeader>.@s</TableRowHeader>
+                                        }
+                                        <TableRowCell><a href="javascript:void(0)" @onclick="@(async () => await DownloadRouteDataAsync(s))">The_Five_Peaks_Challenge.@s</a></TableRowCell>
+                                    </TableRow>
+                                }
+                            </TableBody>
+                        </Table>
+
+                    </div>
+                </div>
+
+            </TabPanel>
+        </Content>
+    </Tabs>
+
+
+
+
+</PageBase>
+
+@code{
+
+    [Parameter]
+    public string LatLong { get; set; } = ""; // must be of the form "lat,long", in URL form  43-343%2C2-31 (43.343,2.31)
+
+    private readonly string[] _fileTypes = { "fit", "gpx", "kml", "tcx", "geojson" };
+
+    string _selectedTab = "online";
+
+    private void OnSelectedTabChanged(string name)
+    {
+        _selectedTab = name;
+    }
+
+    [Inject]
+    IJSRuntime ThisJsRuntime { get; set; }
+
+    private async Task DownloadRouteDataAsync(string fileType)
+    {
+        await ThisJsRuntime.InvokeVoidAsync("downloadRouteData", fileType);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if(LatLong != null)
+                LatLong = LatLong.Replace("point", ".").Replace("comma", ",");
+
+            await ThisJsRuntime.InvokeVoidAsync("setupLeaflet", LatLong);
+            await base.OnAfterRenderAsync(firstRender);
+        }
+    }
+
+}

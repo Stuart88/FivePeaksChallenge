@@ -1,0 +1,56 @@
+﻿@page "/admin/login"
+@using System.Net.Http.Headers
+@using System.Text
+@inject NavigationManager NavigationManager
+@using FivePeaks.Shared.Models
+
+@inject HttpClient Http
+
+<div class="fully-centred full-page-width centred-item-admin" style="max-width: 400px">
+    <h3>Admin Login</h3>
+    <Field>
+        <TextEdit Role="TextRole.Text" @bind-Text="@_username" Placeholder="Username" />
+    </Field>
+    <Field>
+        <TextEdit Role="TextRole.Password" @bind-Text="@_password" Placeholder="Password" />
+    </Field>
+    <Button Color="Color.Primary" Clicked="@SubmitLogin">Login</Button>
+
+    <br />
+    <div>@_responseMsg</div>
+</div>
+
+@code {
+
+    string _username;
+    string _password;
+    bool _loggedIn;
+    string _responseMsg = "";
+
+    private async Task SubmitLogin()
+    {
+        try
+        {
+            _responseMsg = "...";
+
+            var request = new Helpers.HttpPostHelper<string>("Admin/Login", "");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_username}:{_password}")));
+
+            BasicHttpResponse<AdminUser> resp = await request.SendAsync<AdminUser>(Http);
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                Helpers.SessionState.AdminLoggedIn = true;
+                Helpers.SessionState.Admin = resp.Data;
+                NavigationManager.NavigateTo("/admin/blogslist");
+            }
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+}

@@ -1,0 +1,88 @@
+﻿@page "/"
+@using FivePeaks.Client.Helpers
+
+<PageBase ImageNum="5">
+    <div id="home-page-text-area" class="white-opaque-box info-area-min-width">
+      
+        <img style="max-height:100px;max-width:100px" src="@ServerHelpers.ImageSrcString("icons/logo.png")" />
+
+        <h1 class="page-title">The Five Peaks Challenge</h1>
+
+        <div class="text-area-general" style="font-size: 20px; font-weight: bold; max-width: 500px; text-align: center;margin:auto">
+            <p style="font-weight:normal">
+                Yorkshire Dales newest and most exclusive challenge
+            </p>
+            <Divider></Divider>
+            <table class="home-info-table">
+                <tr class="home-info-table-row">
+                    <td class="home-info-table-label">Total Length</td>
+                    <td class="home-info-table-text">41km</td>
+                </tr>
+                <tr class="home-info-table-row">
+                    <td class="home-info-table-label">Total Ascent</td>
+                    <td class="home-info-table-text">1500m</td>
+                </tr>
+                <tr class="home-info-table-row">
+                    <td class="home-info-table-label">Total Peaks</td>
+                    @if (_smallScreen)
+                    {
+                        <td class="home-info-table-text">5</td>
+                    }
+                    else
+                    {
+                        <td class="home-info-table-text">Five of the Yorkshire Dale's Top 10 Tallest</td>
+                    }
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <table style="width: 242px;margin:auto">
+                            <tr style="border:2px solid black" class="home-info-table-row">
+                                <td class="home-info-table-label" colspan="2">Target Time</td>
+                            </tr>
+                            <tr>
+                                <td style="border:2px solid black" class="home-info-table-text">Under 12 hrs</td>
+                                <td style="border:2px solid black" class="home-info-table-text">Pro</td>
+                            </tr>
+                            <tr>
+                                <td style="border:2px solid black" class="home-info-table-text">Under 10 hrs</td>
+                                <td style="border:2px solid black" class="home-info-table-text">Elite</td>
+                            </tr>
+                            <tr>
+                                <td style="border:2px solid black" class="home-info-table-text">Under 8 hrs</td>
+                                <td style="border:2px solid black" class="home-info-table-text">Unhuman</td>
+                            </tr>
+                            <tr>
+                                <td style="border:2px solid black" class="home-info-table-text">Under 6 hrs</td>
+                                <td style="border:2px solid black" class="home-info-table-text">Godlike</td>
+                            </tr>
+                            <tr>
+                                <td style="border:2px solid black" class="home-info-table-text">Under 4 hrs</td>
+                                <td style="border:2px solid black" class="home-info-table-text">UNREAL</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</PageBase>
+
+
+@code{
+    
+    bool _smallScreen;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _smallScreen = ScreenSizeHelper.IsSmallScreen;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _smallScreen = ScreenSizeHelper.IsSmallScreen;
+    }
+
+}

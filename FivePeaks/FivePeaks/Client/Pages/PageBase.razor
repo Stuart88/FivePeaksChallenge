@@ -1,0 +1,26 @@
+﻿
+
+
+<div class="background-image" style="background-image: url('/images/backgrounds/@(ImageNum).jpg')">
+
+    <div class="all-content">
+        @ChildContent
+    </div>
+
+    <div class="bottom-corner-insta-btn">
+        <NavLink href="/admin/login">
+            Admin
+        </NavLink>
+    </div>
+
+</div>
+
+@code{
+
+    [Parameter]
+    public int ImageNum { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+}

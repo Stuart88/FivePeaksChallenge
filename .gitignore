@@ -1,0 +1,9 @@
+.vs/
+[Bb]in/
+obj/
+*.user
+artifacts/
+.vscode/
+.dotnet/
+*.binlog
+Other Bits/

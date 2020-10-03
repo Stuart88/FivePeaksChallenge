@@ -1,0 +1,43 @@
+﻿
+@page "/weather"
+
+<PageBase ImageNum="7">
+
+    <div id="why-page-text-area" class="white-opaque-box info-area-min-width" style="max-width: 500px;margin-bottom:100px">
+
+        <h1 class="page-title">Local Weather</h1>
+
+        <Divider></Divider>
+        <p>
+            Latest Weather - click here: <br />
+            <a href="https://www.metoffice.gov.uk/weather/forecast/gcwmm1vur" target="_blank">Met Office - Great Shunner Fell</a>
+        </p>
+        <h3>Met Office Mountain Forecast:
+            <br/>Yorkshire Dales</h3>
+        <div id="widget-area">
+
+        </div>
+
+    </div>
+</PageBase>
+
+@code {
+
+    [Inject]
+    IJSRuntime ThisJsRuntime { get; set; }
+
+    private async Task ToggleWeatherWidget(bool show)
+    {
+        await ThisJsRuntime.InvokeVoidAsync("toggleWeatherWidget", show);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ToggleWeatherWidget(true);
+        }
+    }
+}
+
+

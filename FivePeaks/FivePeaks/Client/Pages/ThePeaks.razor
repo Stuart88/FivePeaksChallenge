@@ -1,0 +1,276 @@
+﻿
+
+@page "/thepeaks"
+@using FivePeaks.Client.Helpers
+@inject NavigationManager NavigationManager
+
+<PageBase ImageNum="4">
+    <div style="max-width: 800px;margin-bottom:100px">
+        <div id="why-page-text-area" class="white-opaque-box info-area-min-width" style="max-width: 800px">
+
+            <h1 class="page-title">The Peaks</h1>
+
+            <Divider></Divider>
+
+            <div class="text-area-general">
+                <p style="font-style:italic">
+                    The challenge was named "The Five Peaks" as it completes FIVE of The Yorkshire Dales tallest peaks in one trip. However, there are two lesser peaks climbed in the day. Totalling seven claimed along route.
+                </p>
+            </div>
+
+        </div>
+
+        <br />
+        <div style="max-width: 600px; margin: auto;display:flex">
+            <img class="img-fluid rounded" src="@ServerHelpers.ImageSrcString("route/peakprofile.png")" />
+        </div>
+        <br />
+        <div style="max-width: 240px;margin:auto">
+            <Select TValue="int" SelectedValue="@_orderingOption" SelectedValueChanged="@OnSelectedValueChanged">
+                <SelectItem Value="0" Disabled="true">Sort Order</SelectItem>
+                <SelectItem Value="1">Route Order (anticlockwise)</SelectItem>
+                <SelectItem Value="2">Route Order (clockwise)</SelectItem>
+                <SelectItem Value="3">Difficulty (anticlockwise)</SelectItem>
+                <SelectItem Value="4" Disabled="true">Difficulty (clockwise) (unknown!)</SelectItem>
+                <SelectItem Value="5">Highest First</SelectItem>
+                <SelectItem Value="6">Lowest First</SelectItem>
+                <SelectItem Value="7">A-Z</SelectItem>
+                <SelectItem Value="8">Z-A</SelectItem>
+            </Select>
+        </div>
+        <br />
+
+        <div style="display: flex; flex-wrap: wrap; align-content: center;max-width: 800px;">
+            @for (int i = 0; i < _peaks.Count; i++)
+            {
+                int index = i;
+                <div style="margin: auto;">
+                    <div class="white-opaque-box peaks-info" style="@_peaks[i].GetBorderStyle()">
+                        <h5>@(i+1). @_peaks[i].Name</h5>
+                        <h6><b>@(_peaks[i].Height)m</b></h6>
+                        <table class="peaks-info-table">
+                            <tr>
+                                <td class="peak-info-label">Grid Ref</td>
+                                <td class="peak-info-text">@(_peaks[i].GridRef)</td>
+                            </tr>
+                            <tr>
+                                <td class="peak-info-label">Lat Long</td>
+                                <td class="peak-info-text">@(_peaks[i].LatLong.Lat), @(_peaks[i].LatLong.Long)</td>
+                            </tr>
+                            <tr>
+                                <td class="peak-info-label">Map</td>
+                                <td class="peak-info-text"><a target="_blank" @onclick="(e => NavigateToMap(_peaks[index]))">View Map</a></td>
+                            </tr>
+                            @if (_orderingOption == 3)
+                            {
+                                <tr>
+                                    <td class="peak-info-label">
+                                        Difficulty
+                                    </td>
+                                    <td class="peak-info-text">
+                                        <Tooltip Text="@_peaks[i].DifficultyInfoAntiClockwise" Multiline="true">
+                                            <a>Info</a>
+                                        </Tooltip>
+                                    </td>
+
+                                </tr>
+                            }
+                        </table>
+
+                        <div class="peak-img-div">
+                            <img class="img-fluid hover-pointer" @onclick="(e => NavigateToMap(_peaks[index]))" style="margin:auto" src="@ServerHelpers.ImageSrcString($"peaks/{_peaks[i].ImageSrc}")" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+    </div>
+</PageBase>
+
+@code{
+
+    private int _orderingOption = 0;
+
+    private void NavigateToMap(PeakInfo p)
+    {
+        string latlong = $"{p.LatLong.Lat}comma{p.LatLong.Long}";
+        latlong = latlong.Replace(".", "point");
+
+        NavigationManager.NavigateTo($"/maps/{latlong}");
+    }
+
+    private void OnSelectedValueChanged(int value)
+    {
+        _orderingOption = value;
+        _peaks = _orderingOption switch
+        {
+            1 => _peaks.OrderBy(p => p.RouteNumber).ToList(),
+            2 => _peaks.OrderByDescending(p => p.RouteNumber).ToList(),
+            3 => _peaks.OrderBy(p => p.DifficultyAntiClockwise).ToList(),
+            4 => _peaks.OrderBy(p => p.DifficultyClockwise).ToList(),
+            5 => _peaks.OrderByDescending(p => p.Height).ToList(),
+            6 => _peaks.OrderBy(p => p.Height).ToList(),
+            7 => _peaks.OrderBy(p => p.Name).ToList(),
+            8 => _peaks.OrderByDescending(p => p.Name).ToList(),
+            _ => _peaks.OrderBy(p => p.RouteNumber).ToList()
+        };
+
+        string trackingStr = _orderingOption switch
+        {
+            1 => "RouteAnticlockwise",
+            2 => "RouteClockwise",
+            3 => "DifficultyAnticlockwise",
+            4 => "DifficultyClockwise",
+            5 => "HighestFirst",
+            6 => "LowestFirst",
+            7 => "AtoZ",
+            8 => "ZtoA",
+            _ => "Default"
+        };
+
+        Analytics.TrackEvent("sortedGallery", trackingStr);
+    }
+
+    [Inject]
+    IAnalytics Analytics { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _peaks = _peaks.OrderBy(p => p.RouteNumber).ToList();
+    }
+
+
+    private class PeakInfo
+    {
+        public string Name { get; set; }
+        public int RouteNumber { get; set; }
+        public int DifficultyClockwise { get; set; }
+        public int DifficultyAntiClockwise { get; set; }
+        public int Height { get; set; }
+        public string Description { get; set; }
+        public bool IsMainPeak { get; set; }
+        public string DifficultyInfoAntiClockwise { get; set; }
+        public (double Lat, double Long) LatLong { get; set; }
+        public string GridRef { get; set; }
+        public string MapLink { get; set; }
+        public string ImageSrc { get; set; }
+
+        public string GetBorderStyle()
+        {
+            return this.IsMainPeak
+                ? "border:2px solid rgb(255,221,94)"
+                : "border:2px solid rgb(63,91,169)";
+        }
+    }
+
+    private List<PeakInfo> _peaks = new List<PeakInfo>()
+{
+        new PeakInfo
+        {
+            Name = "Great Shunner Fell",
+            RouteNumber = 2,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 4,
+            Height = 716,
+            IsMainPeak = true,
+            Description = "Yorkshire Dales 3rd tallest Peak. The first accomplishment of the day. Prominence 297m",
+            DifficultyInfoAntiClockwise = "This starts with a steep climb, not much shorter than what you will just had to climb to get up Tarn Hill. It then shallows out for an easier but much longer climb along the Pennine Way to the summit. The length to reach the first of The Five Peaks is what makes this slightly harder, especially as it steepens towards the top",
+            GridRef = "SD 84753 97161",
+            LatLong = (54.369728 , -2.2361905),
+            MapLink = @"https://www.bing.com/maps?osid=f6189735-84dc-4887-801f-45a40b9d5cc5&cp=54.369303~-2.23741&lvl=15&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "greatshunner.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "Hugh Seat",
+            RouteNumber = 3,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 3,
+            Height = 689,
+            IsMainPeak = true,
+            Description = "Yorkshire Dales 10th tallest Peak. Prominence only 24m, but this is much more difficult to reach From Great Shunner than you may think",
+            DifficultyInfoAntiClockwise = "A very deceptive peak to reach. From Great Shunner Fell you will find yourself dipping back down on to the plateau. You’re then faced with constant uneven ground and will struggle to find the path at times. Miles of hiking through this, being over 600m up for all of it, plus a slight uphill for a couple of kilometres to the peak, make this much more challenging then you may think.",
+            GridRef = "SD 80915 99100",
+            LatLong = (54.387025 , -2.2953844),
+            MapLink = @"https://www.bing.com/maps?osid=84cb5c10-b347-43dc-96e0-a4b00149b8bf&cp=54.387418~-2.30004&lvl=16&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "hughseat.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "Gregory Chapel",
+            RouteNumber = 4,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 7,
+            Height = 695,
+            IsMainPeak = true,
+            Description = "Yorkshire Dales 8th tallest Peak. An easy bag. Prominence 28m and a short hike from Hugh Seat",
+            DifficultyInfoAntiClockwise = "By far the easiest peak to reach. From the previous peak, Hugh Seat, it is only a couple of kilometres hike with a small dip leading round to the summit. Nothing too taxing but is an official named peak to be ticked off the Five Peaks list.",
+            GridRef = "NY 80200 00300",
+            LatLong = (54.397782 , -2.3064745),
+            MapLink = @"https://www.bing.com/maps?osid=9cc49db9-3cc1-4886-a997-9327e03fdac8&cp=54.398175~-2.31113&lvl=16&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "gregorychapel.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "High Seat",
+            RouteNumber = 5,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 6,
+            Height = 709,
+            IsMainPeak = true,
+            Description = "Yorkshire Dales 4th tallest Peak. Another easy hike from Gregory Chapel. Total prominence 112m, but only if climbed from the valley",
+            DifficultyInfoAntiClockwise = "Although this is the one of the tallest, being Yorkshire’s 4th highest peak, it is certainly not too difficult to reach from the previous, Gregory Chapel, as you will already be high on the plateau. It is a hike just over a kilometre, with a short hill climb to reach the top. You will also find it is the least clearly marked, with only a small pile of stones marking the summit.",
+            GridRef = "NY 80204 01253",
+            LatLong = (54.406345 , -2.306481),
+            MapLink = @"https://www.bing.com/maps?osid=eebc98a8-b9cd-4bdc-878e-5e525f7f3d8b&cp=54.406393~-2.309656&lvl=16&style=s&imgid=48fdbd87-2789-4b8e-98b4-828a9e16bc2d&v=2&sV=2&form=S00027",
+            ImageSrc = "highseat.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "Wild Boar Fell",
+            RouteNumber = 6,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 1,
+            Height = 708,
+            IsMainPeak = true,
+            Description = "Possibly one of the Yorkshire Dales finest mountains. 344m prominence, to be climbed from the valley.",
+            DifficultyInfoAntiClockwise = "This mountain is a soul destroyer. You will likely be shattered by the time you reach the calm of valley again at Outhgill, after spending hours on the top of plateau. No one in their right mind would want to head off up another mountain after all that… unless they wanted to complete The Five Peaks. It is a long and at times very steep hike up to the summit. On already very tired legs, this will be very, very difficult. Easily the don of all the mountains in the area. You will certainly get a sense of achievement when you reach the final summit of The Five Peaks. ",
+            GridRef = "SD 75802 98800",
+            LatLong = (54.384110 , -2.3740824),
+            MapLink = @"https://www.bing.com/maps?osid=ce84751a-021a-450b-aae5-a043e7b0d315&cp=54.384503~-2.378738&lvl=16&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "wildboarfell.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "Tarn Hill",
+            RouteNumber = 1,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 5,
+            Height = 530,
+            IsMainPeak = false,
+            Description = "Not even a mountain. Merely a named hill. But this is the first hill you'll be walking over to get a feel for whats to come",
+            DifficultyInfoAntiClockwise = "The first hill of the day and technically the smallest. However, from the start you will be faced with the first 300m climb of the day. With fresh legs and full of energy, this should not feel too hard. More of a practice run for what will be to come.",
+            GridRef = "SD 81340 93970",
+            LatLong = (54.340937 , -2.2885166),
+            MapLink = @"https://www.bing.com/maps?osid=db2b3ab5-5f7f-4323-b5c4-01dded783247&cp=54.341977~-2.297739&lvl=15&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "tarnhill.jpg"
+        },
+        new PeakInfo
+        {
+            Name = "Swarth Fell",
+            RouteNumber = 7,
+            DifficultyClockwise = 0,
+            DifficultyAntiClockwise = 2,
+            Height = 681,
+            IsMainPeak = false,
+            Description = "Yorkshire Dales 13th tallest Peak. Wild Boars younger brother. Certainly not easy after completing six peaks before it",
+            DifficultyInfoAntiClockwise = "By the time you reach the climb to Swarth Fell, you will be on your last legs. A relatively short and steep climb of about 50m which you will find extremely hard after everything you have been through already. A real killer after the huge climb of Wild Boar just before it. From here though, it is nearly all downhill back to the pub.",
+            GridRef = "SD 75575 96660",
+            LatLong = (54.364867 , -2.3774087),
+            MapLink = @"https://www.bing.com/maps?osid=387618d3-b850-44e3-8ed6-6213696c142c&cp=54.365262~-2.382065&lvl=16&style=s&v=2&sV=2&form=S00027",
+            ImageSrc = "swarthfell.jpg"
+        },
+    };
+
+}

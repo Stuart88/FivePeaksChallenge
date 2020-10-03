@@ -1,0 +1,90 @@
+﻿@page "/blog"
+@using FivePeaks.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageBase ImageNum="9">
+
+    <div id="why-page-text-area" class="white-opaque-box info-area-min-width" style="margin-bottom:100px">
+
+        <h1 class="page-title">Adventure Blog</h1>
+        <h5>Other hikes and adventures</h5>
+
+        <Divider></Divider>
+
+        <div style="display: flex; flex-wrap: wrap; align-content: center;">
+            @foreach (BlogPost b in _blogs)
+            {
+                string imgSrc = $"Blog/GetHeaderImage/{b.Id}";
+
+                <div style="margin: auto;">
+                    <div class="white-opaque-box peaks-info">
+
+                        <Card>
+                            <CardImage Class="hover-pointer" Style="max-height:160px" @onclick="@(e => GoToBlog(b))" Source="@imgSrc" Alt="@b.Title">
+                            </CardImage>
+                            <CardBody>
+                                <div class="blog-card-info">
+                                    <div class="blog-date">
+                                        @b.PostDate.ToString("ddd dd MMM yyyy")
+                                    </div>
+                                </div>
+                                <CardTitle Size="5">@b.Title</CardTitle>
+                                <div style="text-align:right">
+                                    <NavLink href="@($"/blog/{b.Id}/{FivePeaks.Shared.Helpers.Functions.MakeUrlSafe(b.Title)}")"><Button Color="Color.Primary" Size="ButtonSize.Small">Read More</Button></NavLink>
+                                </div>
+                            </CardBody>
+                        </Card>
+
+                    </div>
+                </div>
+            }
+        </div>
+
+    </div>
+</PageBase>
+
+
+
+
+@code{
+
+    List<BlogPost> _blogs = new List<BlogPost>();
+    string _responseMsg = "";
+
+    void GoToBlog(BlogPost b)
+    {
+        NavigationManager.NavigateTo($"/blog/{b.Id}/{FivePeaks.Shared.Helpers.Functions.MakeUrlSafe(b.Title)}");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetBlogs();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task GetBlogs()
+    {
+        try
+        {
+            _responseMsg = "";
+
+            BasicHttpResponse<List<BlogPost>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<BlogPost>>>($"Blog/GetLiveBlogs");
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                _blogs.AddRange(resp.Data);
+                this.StateHasChanged();
+            }
+            else
+                throw new Exception(resp.Message);
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+}

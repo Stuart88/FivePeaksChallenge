@@ -1,0 +1,115 @@
+﻿
+@page "/gallery"
+
+@using FivePeaks.Client.Helpers
+
+
+<PageBase ImageNum="8">
+    <div style="max-width:1100px;margin:0 auto 100px">
+        <div id="why-page-text-area" class="white-opaque-box info-area-min-width">
+
+            <h1 class="page-title">Gallery</h1>
+
+            <Divider></Divider>
+            
+            <div class="text-area-general">
+                <p>
+                    Some photos from the first ever completion of the Five Peaks Challenge
+                </p>
+            </div>
+
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; align-content: center;">
+            @for (int i = 0; i < _gallerySize; i++)
+            {
+                <div style="margin: auto;">
+                    <div class="white-opaque-box gallery-box">
+
+                        <img class="img-fluid rounded" style="margin: auto" src="@ServerHelpers.ImageSrcString($"gallery/{i + 1}.jpg", true)"
+                             @onclick="@(_modalOpeners[i])"/>
+
+                    </div>
+                </div>
+            }
+        </div>
+
+
+    </div>
+
+
+</PageBase>
+
+<Modal @ref="_modalRef" >
+    <ModalBackdrop />
+    <ModalContent IsCentered="true" Size="ModalSize.ExtraLarge">
+        <ModalHeader>
+            <ModalTitle>Image Viewer</ModalTitle>
+            <CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody>
+            <Carousel @bind-SelectedSlide="@_selectedSlide">
+                @for (int i = 0; i < _gallerySize; i++)
+                {
+                    <CarouselSlide Name="@((i+1).ToString())">
+                        <img class="img-fluid rounded" style="margin: auto" src=""
+                             @onclick="HideModal"/>
+                        <Image Source="@ServerHelpers.ImageSrcString($"gallery/{_selectedSlide}.jpg")" Text="" Display="Display.Block" Style="width: 100%;"/>
+                    </CarouselSlide>
+                }
+               
+            </Carousel>
+            
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code{
+
+    private int _gallerySize = 23;
+
+    /// <summary>
+    /// This is madness but can't figure out another way. Using 'i' in loop onyl provides i as its last value. I've looked up how
+    /// to fix 'capture variable' issues and it's not working here!
+    /// </summary>
+    private List<Action> _modalOpeners = new List<Action>();
+
+    [Inject]
+    IAnalytics Analytics { get; set; }
+
+    private string _selectedSlide = "1";
+
+    private Modal _modalRef;
+
+    private void ShowModal(int id)
+    {
+        _selectedSlide = id.ToString();
+        _modalRef.Show();
+        ClickedPhoto(id.ToString());
+    }
+
+    private void HideModal()
+    {
+        _modalRef.Hide();
+    }
+
+    protected override void OnInitialized()
+    {
+        for (int i = 0; i < _gallerySize; i++)
+        {
+            int id = i+1;
+            _modalOpeners.Add(() => {
+                if(!ScreenSizeHelper.IsSmallScreen)
+                    ShowModal(id);
+            });
+        }
+    }
+
+    private void ClickedPhoto(string id)
+    {
+        Analytics.TrackEvent("clickedPhoto", id);
+    }
+}

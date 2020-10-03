@@ -1,0 +1,87 @@
+﻿@page "/blog/{BlogId}/{Title}"
+@page "/blog/{BlogId}"
+@using FivePeaks.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageBase ImageNum="1">
+
+    <div class="white-opaque-box info-area-min-width" style="max-width: 1000px; margin: auto; margin-bottom:100px">
+
+        <img class="img-fluid" style="margin: auto; margin-bottom:30px" src="@($"Blog/GetHeaderImage/{BlogId}")" />
+
+        <BlogTagsList IsAdmin="@false" Tags="@_blogTags"/>
+        
+        <div class="blog-card-info">
+            <div class="blog-date" style="padding-left:8px">
+                @Blog.PostDate.ToString("ddd dd MMM yyyy")
+            </div>
+        </div>
+
+        <h1 class="page-title">@Blog.Title</h1>
+
+        <Divider></Divider>
+        
+
+        <div class="text-area-general about-text blog-content ql-editor">
+            @((MarkupString)Blog.Content)
+        </div>
+
+        <Button Color="Color.Primary" style="width:200px" @onclick="@BackBtnClicked">Back</Button>
+
+    </div>
+</PageBase>
+
+@code{
+
+    [Parameter]
+    public string BlogId { get; set; } = "0";
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    BlogPost Blog { get; set; } = new BlogPost();
+    string _responseMsg = "";
+
+    List<string> _blogTags = new List<string>();
+
+    private void BackBtnClicked()
+    {
+        NavigationManager.NavigateTo("/blog");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetBlog();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task GetBlog()
+    {
+        try
+        {
+            _responseMsg = "";
+
+            BasicHttpResponse<BlogPost> resp = await Http.GetFromJsonAsync<BasicHttpResponse<BlogPost>>($"Blog/GetBlog/{BlogId}");
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                Blog = resp.Data;
+                _blogTags = Blog.Tags.Split(",").ToList();
+
+                this.StateHasChanged();
+                
+                _ = await Http.GetFromJsonAsync<BasicHttpResponse<object>>($"Blog/IncrementViews/{BlogId}");
+            }
+            else
+                throw new Exception(resp.Message);
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+}

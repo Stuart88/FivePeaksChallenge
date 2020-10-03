@@ -1,0 +1,129 @@
+﻿@page "/admin/blogslist"
+@using FivePeaks.Shared.Models
+
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime;
+
+<div class="fully-centred full-page-width centred-item-admin" style="max-width: 1000px">
+    <div>
+        <h2>BLOGS!</h2>
+        <div style="color:red">
+            @_responseMsg
+        </div>
+        <table class="table table-striped" style="width: 100%;margin:4px">
+            <tr>
+                <td colspan="8" align="left"><Button Color="Color.Success" @onclick="@(e => EditBlogPost())">New Post</Button></td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <th>Title</th>
+                <th>Post Date</th>
+                <th>Author</th>
+                <th>Views</th>
+                <th>Active</th>
+                <th></th>
+                <th></th>
+            </tr>
+            @foreach (BlogPost b in _blogs)
+            {
+                var id = b.Id;
+                <tr>
+                    <td>@b.CreationDate.ToString("dd-MMM-yyyy HH:mm")</td>
+                    <td width="30%">@b.Title</td>
+                    <td>@b.PostDate.ToString("dd-MMM-yyyy HH:mm")</td>
+                    <td>@b.Author</td>
+                    <td align="center">@b.Views</td>
+                    <td align="center"><Switch TValue="bool" Checked="@b.Active" CheckedChanged="@(e => ToggleBlogActive(b.Id))" /></td>
+                    <td align="center"><Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@(e => EditBlogPost(id))">Edit</Button></td>
+                    <td align="center"><Button Color="Color.Danger" Size="ButtonSize.Small" @onclick="@(e => DeleteBlogPost(id))">Delete</Button></td>
+                </tr>
+            }
+        </table>
+
+        <LogoutBtn />
+    </div>
+</div>
+
+
+@code {
+
+    int _page = 0;
+    string _responseMsg = "";
+
+    List<BlogPost> _blogs = new List<BlogPost>();
+
+    void EditBlogPost(int id = 0)
+    {
+        NavigationManager.NavigateTo($"/admin/editblog/{id}");
+    }
+
+    async void ToggleBlogActive(int id)
+    {
+        BasicHttpResponse<BlogPost> resp = await Http.GetFromJsonAsync<BasicHttpResponse<BlogPost>>($"Blog/ToggleActive/{id}");
+
+        if (!resp.Ok)
+        {
+            _responseMsg = resp.Message;
+        }
+        else
+        {
+            int i = _blogs.IndexOf(_blogs.First(b => b.Id == id));
+            _blogs[i] = resp.Data;
+            this.StateHasChanged();
+        }
+    }
+
+    async void DeleteBlogPost(int id)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+
+        if (confirmed)
+        {
+            BasicHttpResponse<object> resp = await Http.GetFromJsonAsync<BasicHttpResponse<object>>($"Blog/DeleteBlog/{id}");
+
+            if (resp.Ok)
+            {
+                _blogs.Remove(_blogs.FirstOrDefault(b => b.Id == id));
+                this.StateHasChanged();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Helpers.SessionState.AdminLoggedIn)
+        {
+            NavigationManager.NavigateTo("/admin/login");
+        }
+
+        await GetBlogs();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task GetBlogs()
+    {
+        try
+        {
+            _responseMsg = "";
+
+            BasicHttpResponse<List<BlogPost>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<BlogPost>>>($"Blog/GetBlogs/{_page}");
+
+            _responseMsg = resp.Message;
+
+            if (resp.Ok)
+            {
+                _blogs.AddRange(resp.Data);
+                this.StateHasChanged();
+            }
+            else
+                throw new Exception(resp.Message);
+        }
+        catch (Exception e)
+        {
+            _responseMsg = e.Message;
+        }
+    }
+
+
+}

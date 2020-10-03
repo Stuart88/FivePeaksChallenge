@@ -1,0 +1,13 @@
+﻿
+@inject NavigationManager NavigationManager
+
+<Button Color="Color.Primary" Clicked="@Logout">Logout</Button>
+
+@code {
+
+    void Logout()
+    {
+        Helpers.SessionState.AdminLoggedIn = true;
+        NavigationManager.NavigateTo("/admin/login");
+    }
+}

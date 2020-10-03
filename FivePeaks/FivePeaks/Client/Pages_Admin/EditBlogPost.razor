@@ -1,0 +1,272 @@
+﻿
+@page "/admin/editblog"
+
+@page "/admin/editblog/{BlogId}"
+
+@using FivePeaks.Shared.Models
+@using System.IO
+@using Blazorise.Components
+
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<div class="fully-centred full-page-width" style="max-width:600px; margin: auto;padding: 100px 0;">
+    <div hidden="@(!_hideLoader)">
+        <Field>
+            <FieldLabel>Title</FieldLabel>
+            <TextEdit Placeholder="Title" @bind-Text="@_blog.Title" />
+        </Field>
+        <Field>
+            <FieldLabel>Author</FieldLabel>
+            <TextEdit Placeholder="@FivePeaks.Client.Helpers.SessionState.Admin.Username" @bind-Date="@_blog.Author" ReadOnly="@(_blog.Id == 0)" />
+        </Field>
+        <Fields>
+            <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                <FieldLabel>Post Date</FieldLabel>
+                <DateEdit TValue="DateTime" @bind-Date="@_postDate" />
+            </Field>
+            <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                <FieldLabel>Post Time</FieldLabel>
+                <TimeEdit TValue="TimeSpan" @bind-Time="@_postTime" />
+            </Field>
+        </Fields>
+        <Field>
+            <FieldLabel>Is Active</FieldLabel>
+            <Switch TValue="bool" @bind-Checked="@_blog.Active" />
+        </Field>
+        <Field>
+            <DropdownList Data="@_availableTags"
+                          TextField="@((item) => item)"
+                          ValueField="@((item) => item)"
+                          SelectedValue="@_selectedTag"
+                          SelectedValueChanged="@(e => OnTagSelected((string) e))"
+                          Color="Color.Primary">
+                Tags
+            </DropdownList>
+            <br/>
+            <BlogTagsList Tags="@_selectedTags" IsAdmin="@true" OnRemoveTag="@OnRemoveTag" />
+
+        </Field>
+        <Field>
+            <FieldLabel>Header Image</FieldLabel>
+            <FileEdit Filter="image/jpeg, image/png" Changed="@OnChanged">
+                <FieldHelp>Size:@_fileSize</FieldHelp>
+            </FileEdit>
+        </Field>
+
+        <img class="img-fluid" style="margin: auto;display:block" src="@_headerImgSrc" />
+
+        <div class="blog-content">
+            <div id="quill-editor"></div>
+        </div>
+
+        <table style="width:100%">
+            <tr>
+                <td width="25%"><Button Color="Color.Danger" style="width:100%" @onclick="@CancelBtnClicked">Cancel</Button></td>
+                <td width="75%"><Button Color="Color.Primary" style="width:100%" @onclick="@SaveBtnClicked">Save</Button></td>
+            </tr>
+        </table>
+    </div>
+
+    <img hidden="@_hideLoader" style="width: 100px; height: 100px; align-self: center" src="images/icons/loading.gif" />
+
+    <div style="margin-bottom:5px;color:red;">
+        @_validationMsg
+    </div>
+</div>
+
+@code {
+
+    DateTime _postDate = DateTime.Now;
+    TimeSpan _postTime = TimeSpan.Zero;
+    string _validationMsg = "";
+    string _fileSize = "0kb";
+    string _headerImgSrc = "Blog/GetHeaderImage/0";
+    bool _hideLoader = true;
+    List<string> _availableTags = new List<string>();
+    List<string> _selectedTags = new List<string>();
+    string _selectedTag = "";
+
+    [Inject]
+    IJSRuntime ThisJsRuntime { get; set; }
+
+    void OnTagSelected(string tag)
+    {
+        if (!string.IsNullOrEmpty(tag))
+        {
+            _selectedTags.Add(tag);
+            SetAvailableTags();
+            this.StateHasChanged();
+        }
+        
+    }
+
+    void OnRemoveTag(string tag)
+    {
+        if (!string.IsNullOrEmpty(tag))
+        {
+            _selectedTags.Remove(tag);
+            SetAvailableTags();
+            this.StateHasChanged();
+        }
+    }
+
+    private void CancelBtnClicked()
+    {
+        NavigationManager.NavigateTo("/admin/blogslist");
+    }
+
+    private async void SaveBtnClicked()
+    {
+        _validationMsg = "Uploading...";
+        _hideLoader = false;
+
+        _blog.Content = await GetEditorText();
+        _blog.PostDate = _postDate.Date.AddTicks(_postTime.Ticks);
+        _blog.Tags = string.Join(",", _selectedTags.Where(t => !string.IsNullOrEmpty(t)));
+
+        Helpers.HttpPostHelper<BlogPost> req = new Helpers.HttpPostHelper<BlogPost>("Blog/AddEditBlog", _blog);
+
+        BasicHttpResponse<object> resp = await req.SendAsync<object>(Http);
+
+        if (resp.Ok)
+        {
+            NavigationManager.NavigateTo("/admin/blogslist");
+        }
+        else
+        {
+            _validationMsg = resp.Message;
+        }
+
+        _hideLoader = true;
+
+        this.StateHasChanged();
+    }
+
+    private async Task PrepareEditor()
+    {
+        await ThisJsRuntime.InvokeVoidAsync("prepareEditor");
+    }
+
+    private async Task SetEditorText()
+    {
+        await ThisJsRuntime.InvokeVoidAsync("setEditorText", _blog.Content);
+    }
+
+    private async Task<string> GetEditorText()
+    {
+        return await ThisJsRuntime.InvokeAsync<string>("getEditorText");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await PrepareEditor();
+            await SetEditorText();
+        }
+    }
+
+    BlogPost _blog = new BlogPost();
+    
+    [Parameter]
+    public string BlogId { get; set; }
+
+    void SetAvailableTags()
+    {
+        _availableTags = FivePeaks.Shared.Helpers.Blog.BlogTags.Where(tag => !_selectedTags.Contains(tag)).ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            
+
+            if (!Helpers.SessionState.AdminLoggedIn)
+            {
+                NavigationManager.NavigateTo("/admin/login");
+            }
+
+            BasicHttpResponse<BlogPost> resp = await Http.GetFromJsonAsync<BasicHttpResponse<BlogPost>>($"Blog/GetBlog/{BlogId}");
+
+            _blog = resp.Ok
+                ? resp.Data
+                : new BlogPost(){Author = Helpers.SessionState.Admin.Username };
+
+            _postDate = _blog.PostDate.Date;
+            _postTime = _blog.PostDate.TimeOfDay;
+
+            await SetEditorText();
+
+            _headerImgSrc = _blog.HeaderImageBase64.Length > 0
+                ? $"data:image/jpeg;base64, {_blog.HeaderImageBase64}"
+                : $"Blog/GetHeaderImage/{_blog.Id}";
+
+            _selectedTags = _blog.Tags?.Split(",").ToList() ?? new List<string>();
+
+            SetAvailableTags();
+            this.StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            _validationMsg = e.Message;
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task OnChanged(FileChangedEventArgs e)
+    {
+        try
+        {
+            _hideLoader = false;
+
+            if (e.Files.Length > 1)
+            {
+                _validationMsg = "Please select only one header image.";
+                return;
+            }
+
+            foreach (var file in e.Files)
+            {
+                if (file.Size > 8000000)
+                {
+                    _validationMsg = "Image should not be larger than 8MB!";
+                    break;
+                }
+
+                // A stream is going to be the destination stream we're writing to.
+                await using var stream = new MemoryStream();
+
+                // Here we're telling the FileEdit where to write the upload result
+                await file.WriteToStreamAsync(stream);
+
+                // Once we reach this line it means the file is fully uploaded.
+                // In this case we're going to offset to the beginning of file
+                // so we can read it.
+
+                _fileSize = (stream.Length / 1000) + "kb";
+
+                stream.Seek(0, SeekOrigin.Begin);
+
+                _blog.HeaderImageBase64 = Convert.ToBase64String(stream.ToArray());
+
+                _headerImgSrc = $"data:image/jpeg;base64, {_blog.HeaderImageBase64}";
+            }
+        }
+        catch (Exception exc)
+        {
+            Console.WriteLine(exc.Message);
+        }
+        finally
+        {
+            _hideLoader = true;
+            this.StateHasChanged();
+        }
+    }
+
+    string _fileProcessing = "";
+
+
+}

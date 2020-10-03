@@ -9,9 +9,9 @@ namespace FivePeaks.Client.Helpers
 {
     public static class SessionState
     {
-        
         public static bool AdminLoggedIn = false;
         public static AdminUser Admin = null;
         public static bool UserLoggedIn = false;
+        public static UserAccount User = null;
     }
 }

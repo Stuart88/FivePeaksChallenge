@@ -9,6 +9,8 @@ using Microsoft.Extensions.Hosting;
 using System.Linq;
 using FivePeaks.Server.Database;
 using FivePeaks.Shared.Models;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace FivePeaks.Server
 {
@@ -71,6 +73,7 @@ namespace FivePeaks.Server
                     context.Admins.Add(new AdminUser { Username = "Stuart", Password = "123" });
                     context.SaveChanges();
                 }
+
             }
             
             app.UseHttpsRedirection();

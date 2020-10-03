@@ -22,7 +22,17 @@ window.isUserFBLoggedIn = function () {
 
     FB.getLoginStatus(function (response) {
         if (response) {
-            DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', response.status === "connected");
+
+            if (response.status === "connected") {
+                FB.api('/me',
+                    { fields: 'email' },
+                    function(response) {
+                        DotNet.invokeMethodAsync('FivePeaks.Client', 'UpdateUser', response.email);
+                    });
+            } else {
+                DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', false);
+            }
+
         } else {
             DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', false);
         }
@@ -32,7 +42,17 @@ window.isUserFBLoggedIn = function () {
 window.fbLogin = function() {
     FB.login(function (response) {
         if (response) {
-            DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', response.status === "connected");
+
+            if (response.status === "connected") {
+                FB.api('/me',
+                    { fields: 'email' },
+                    function(response) {
+                        DotNet.invokeMethodAsync('FivePeaks.Client', 'UpdateUser', response.email);
+                    });
+            } else {
+                DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', false);
+            }
+
         } else {
             DotNet.invokeMethodAsync('FivePeaks.Client', 'LoginResult', false);
         }

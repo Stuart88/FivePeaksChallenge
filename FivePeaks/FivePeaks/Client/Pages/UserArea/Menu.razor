@@ -2,23 +2,60 @@
 @page "/account"
 @inject NavigationManager NavigationManager
 
+<table style="width:100%;height:100%">
+    <tr>
+        <td valign="middle" align="center">
 
-@if (LoggedIn || FivePeaks.Client.Helpers.SessionState.UserLoggedIn)
-{
-    <div class="fully-centred full-page-width centred-item-admin" style="max-width: 400px">
-        MENU HERE!
-    </div>
-}
+            @if ((LoggedIn || FivePeaks.Client.Helpers.SessionState.UserLoggedIn) && UserAccount != null)
+            {
+                <div class="fully-centred full-page-width" style="max-width: 400px">
+                    <div style="text-align: center">
+                        <h3>User Area</h3>
+                        <h5>Hello, @UserAccount.Username!</h5>
+                        <br />
+                        <br />
+                    </div>
+                    @switch (SelectedMenuOption)
+                    {
+                        case MenuOption.Profile:
+                            <Profile User="UserAccount" BackToMenu="BackToMenu" />
+                            break;
+                        case MenuOption.SubmitData:
+                            break;
+                        default:
+                            <div class="menu-button">
+                                <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Profile))">Profile</Button>
+                            </div>
+                            <div class="menu-button">
+                                <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.SubmitData))">Submit Route Data</Button>
+                            </div>
+                            break;
+                    }
+                </div>
+            }
 
-<LoginComponent ShowLogout="true" OnLogin="OnLoggedIn" OnLogout="OnLoggedOut" />
+            <LoginComponent ShowLogout="true" OnLogin="OnLoggedIn" OnLogout="OnLoggedOut" Hidden="SelectedMenuOption != MenuOption.None" />
+
+        </td>
+    </tr>
+</table>
 
 
 @code{
 
     private bool LoggedIn { get; set; }
+    private MenuOption SelectedMenuOption { get; set; } = Menu.MenuOption.None;
+    private FivePeaks.Shared.Models.UserAccount UserAccount { get; set; }
+
+    private void SetMenuOption(MenuOption opt)
+    {
+        this.SelectedMenuOption = opt;
+        this.StateHasChanged();
+    }
 
     public void OnLoggedIn()
     {
+        this.UserAccount = FivePeaks.Client.Helpers.SessionState.User;
         this.LoggedIn = true;
         this.StateHasChanged();
     }
@@ -29,5 +66,19 @@
         this.LoggedIn = false;
         this.StateHasChanged();
     }
+
+    public void BackToMenu()
+    {
+        this.SelectedMenuOption = MenuOption.None;
+        this.StateHasChanged();
+    }
+
+    private enum MenuOption
+    {
+        None,
+        Profile,
+        SubmitData
+    }
+
 }
 

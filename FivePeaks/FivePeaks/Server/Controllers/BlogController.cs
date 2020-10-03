@@ -200,7 +200,6 @@ namespace FivePeaks.Server.Controllers
             return File(Convert.FromBase64String(blog.HeaderImageBase64), "image/jpeg", $"{blog.Title}.jpg");
         }
 
-        //[AllowAnonymous]
         [HttpPost("[action]")]
         public async Task<IActionResult> AddEditBlog([FromBody] BlogPost blog)
         {

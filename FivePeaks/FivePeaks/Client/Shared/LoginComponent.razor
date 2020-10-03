@@ -1,11 +1,12 @@
-﻿
+﻿@using FivePeaks.Shared.Models
+@inject HttpClient Http
 
-<div class="fully-centred full-page-width centred-item-admin" style="max-width: 400px">
+<div class="fully-centred full-page-width" style="max-width: 400px" hidden="@Hidden">
 
     @if (showLoader)
     {
         <div style="margin:auto; display: flex; justify-content: center; flex-direction: column; align-items: center;">
-            <img style="width: 100px; height: 100px; align-self: center" src="/images/icons/loading.gif"/>
+            <img style="width: 100px; height: 100px; align-self: center" src="/images/icons/loading.gif" />
         </div>
     }
     else
@@ -16,7 +17,7 @@
         }
         else if (ShowLogout)
         {
-            <Button Color="Color.Primary" Clicked="@SubmitLogout">Logout</Button>
+            <Button Color="Color.Danger" Clicked="@SubmitLogout">Logout</Button>
         }
     }
 
@@ -29,6 +30,7 @@
     [Parameter] public bool ShowLogout { get; set; }
     [Parameter] public Action OnLogin { get; set; }
     [Parameter] public Action OnLogout { get; set; }
+    [Parameter] public bool Hidden { get; set; }
 
     string _username;
     string _password;
@@ -36,6 +38,7 @@
     static string _responseMsg = "";
     private static Action<bool> loginResultAction;
     private static Action<bool> logoutResultAction;
+    private static Action<string> updateUserAction;
     public bool showLoader = true;
 
     [Inject]
@@ -45,6 +48,7 @@
     {
         loginResultAction = LoginComplete;
         logoutResultAction = LogoutComplete;
+        updateUserAction = AutoUpdateUser;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -104,6 +108,12 @@
         logoutResultAction.Invoke(loggedin);
     }
 
+    [JSInvokable]
+    public static void UpdateUser(string email)
+    {
+        updateUserAction.Invoke(email);
+    }
+
     private void LoginComplete(bool loggedIn)
     {
 
@@ -125,6 +135,32 @@
             Helpers.SessionState.UserLoggedIn = false;
             this.OnLogout?.Invoke();
             _responseMsg = "";
+        }
+
+        showLoader = false;
+        this.StateHasChanged();
+    }
+
+    private async void AutoUpdateUser(string email)
+    {
+        UserAccount user = new UserAccount
+        {
+            Email = email
+        };
+
+        Helpers.HttpPostHelper<UserAccount> req = new Helpers.HttpPostHelper<UserAccount>("Accounts/UpdateUser", user);
+
+        BasicHttpResponse<UserAccount> resp = await req.SendAsync<UserAccount>(Http);
+
+        if (resp.Ok)
+        {
+            Helpers.SessionState.UserLoggedIn = true;
+            Helpers.SessionState.User = resp.Data;
+            this.OnLogin?.Invoke();
+        }
+        else
+        {
+            _responseMsg = resp.Message;
         }
 
         showLoader = false;

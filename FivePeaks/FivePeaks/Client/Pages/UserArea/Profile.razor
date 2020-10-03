@@ -1,0 +1,82 @@
+﻿@using FivePeaks.Shared.Models
+@inject HttpClient Http
+
+<div>
+    <Field>
+        <FieldLabel>Change Username</FieldLabel>
+        <TextEdit Placeholder="New Username" @bind-Text="@_username" ReadOnly="@_saving" />
+    </Field>
+    <table style="width:100%">
+        <tr>
+            <td width="25%"><Button Color="Color.Danger" style="width:100%" Disabled="@_saving" @onclick="@CancelBtnClicked">Cancel</Button></td>
+            <td width="75%"><Button Color="Color.Primary" style="width:100%" Disabled="@_saving" @onclick="@SaveBtnClicked">Save</Button></td>
+        </tr>
+    </table>
+    <br />
+    <div style="color:goldenrod">@_responseMsg</div>
+</div>
+
+@code {
+
+    [Parameter]
+    public UserAccount User { get; set; }
+
+    [Parameter]
+    public Action BackToMenu { get; set; }
+
+    private string _responseMsg = "";
+    private string _username = "";
+    private bool _saving = false;
+
+    protected override void OnInitialized()
+    {
+        this._username = User.Username;
+        base.OnInitialized();
+    }
+
+    private void CancelBtnClicked()
+    {
+        this.BackToMenu?.Invoke();
+    }
+
+    private async void SaveBtnClicked()
+    {
+        if (string.IsNullOrEmpty(_username))
+        {
+            _responseMsg = "Username too short!";
+            return;
+        }
+
+        if (_username == User.Username)
+        {
+            //nothing changed
+            this.BackToMenu?.Invoke();
+            return;
+        }
+
+        _saving = true;
+        _responseMsg = "saving...";
+
+        this.User.Username = _username;
+        Helpers.HttpPostHelper<UserAccount> req = new Helpers.HttpPostHelper<UserAccount>("Accounts/UpdateUser", User);
+
+        BasicHttpResponse<UserAccount> resp = await req.SendAsync<UserAccount>(Http);
+
+        if (resp.Ok)
+        {
+            Helpers.SessionState.User = resp.Data;
+            _responseMsg = "";
+            this.BackToMenu?.Invoke();
+        }
+        else
+        {
+            _responseMsg = resp.Message;
+        }
+
+        _saving = false;
+        this.StateHasChanged();
+
+    }
+
+}
+

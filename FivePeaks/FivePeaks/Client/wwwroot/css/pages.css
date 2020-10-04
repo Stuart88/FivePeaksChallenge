@@ -216,6 +216,15 @@
 .hide-on-desktop {
     display: none;
 }
+.mobile-menu-account-btn a{
+    margin-top: 30px;
+    background-color: dodgerblue;
+    border-top: 2px solid cornflowerblue;
+    border-bottom: 2px solid cornflowerblue;
+}
+.mobile-menu-account-btn a:hover {
+    background-color: cornflowerblue;
+}
 @media screen and (max-width: 767.98px) {
 
     .all-content {

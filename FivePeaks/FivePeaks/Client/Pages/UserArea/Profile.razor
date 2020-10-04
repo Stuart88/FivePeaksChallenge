@@ -1,7 +1,7 @@
 ﻿@using FivePeaks.Shared.Models
 @inject HttpClient Http
 
-<div class="fully-centred" style="padding:5px;">
+<div class="fully-centred" style="padding:5px;max-width: 500px">
     <Field>
         <FieldLabel>Change Username</FieldLabel>
         <TextEdit Placeholder="New Username" @bind-Text="@_username" ReadOnly="@_saving" />

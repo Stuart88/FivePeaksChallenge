@@ -8,7 +8,7 @@
 
             @if ((LoggedIn || FivePeaks.Client.Helpers.SessionState.UserLoggedIn) && UserAccount != null)
                 {
-            <div class="full-page-width" style="max-width: 400px; padding:60px 2% 50px 2%">
+            <div class="full-page-width" style="max-width: 600px; padding:60px 2% 50px 2%">
                 <div style="text-align: center">
                     <h3>User Area</h3>
                     <h5>Hello, @UserAccount.Username!</h5>
@@ -30,6 +30,7 @@
                                 break;
 
                             default:
+            <div style="max-width: 400px">
                 <div class="menu-button">
                     <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Profile))">Profile</Button>
                 </div>
@@ -39,6 +40,7 @@
                 <div class="menu-button">
                     <Button Color="Color.Secondary" style="width:100%" @onclick="@(e => SetMenuOption(MenuOption.Submissions))">My Submissions</Button>
                 </div>
+            </div>
                                 break;
                         }
             </div>

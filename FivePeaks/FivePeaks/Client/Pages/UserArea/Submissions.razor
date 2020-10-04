@@ -3,32 +3,38 @@
 @inject IJSRuntime JsRuntime;
 
 <div style="padding: 5px">
-
-    <h3>Submissions</h3>
-
+    
     <table style="width: 100%">
-        <tr>
+        <tr style="border-bottom: 2px solid dimgrey;">
+            <th align="center" style="width:60px;text-align:center">Status</th>
             <th>Submission</th>
-            <th>Status</th>
             <th></th>
         </tr>
         @if (SubmissionsList.Count > 0)
         {
             foreach (var item in SubmissionsList)
             {
+                string iconColour = item.Status switch{
+                    LeaderboardEntryState.Pending => "grey",
+                    LeaderboardEntryState.Accepted => "green",
+                    LeaderboardEntryState.NeedMoreInfo => "orange",
+                    LeaderboardEntryState.Rejected => "red",
+                    _ => "grey"};
                 <tr>
+                    <td valign="middle" align="center">
+                        <Tooltip Text="@StatusEnumString(item.Status)">
+                            <MenuIcon FileName="@($"circle-{iconColour}.png")" />
+                        </Tooltip>
+                    </td>
                     <td valign="middle">
                         <div>
                             @item.EntryName
                         </div>
-                        <div style="font-size:12px; color: gray;margin-left:2px; font-style: italic;margin-bottom:5px">
-                            @item.PostDate.ToString("ddd-MM-yyyy")
+                        <div style="font-size:12px; color: gray; font-style: italic;margin-bottom:5px">
+                            @item.PostDate.ToString("dd-MMM-yyyy")
                         </div>
                     </td>
-                    <td valign="middle">
-                        @StatusEnumString(item.Status)
-                    </td>
-                    <td valign="middle">
+                    <td valign="middle" align="right" width="53px">
                         <Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@(e => ShowModal(item))">View</Button>
                     </td>
                 </tr>

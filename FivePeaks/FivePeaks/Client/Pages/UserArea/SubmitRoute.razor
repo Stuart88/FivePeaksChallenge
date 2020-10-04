@@ -77,18 +77,32 @@
             {
                 if (!string.IsNullOrEmpty(Item.RouteDataType))
                 {
-                    <table>
+                    
+                    <table style="width:290px">  
                         <tr>
-                            <td>
+                            <td colspan="2">
                                 <div style="font-style: italic;margin-right:3px">
                                     @Item.RouteDataType file submitted
                                 </div>
                             </td>
-                            <td>
+                        </tr>
+                        <tr>
+                            <td width="85px">
                                 <DownloadRouteDataButton Size="ButtonSize.Small" EntryId="Item.Id"/>
+                            </td>
+                            <td align="left">
+                                <ViewRouteDataOnMapButton Size="ButtonSize.Small" EntryId="Item.Id"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <FieldHelp Style="font-size: 12px; color: lightslategrey; font-style: italic">
+                                    Click 'View on Map' to see the data overlaid in red against the original Five Peaks Challenge route
+                                </FieldHelp>
                             </td>
                         </tr>
                     </table>
+                    
                 }
                 else
                 {
@@ -183,6 +197,9 @@ catch (Exception e)
     [Parameter]
     public Action OnItemSaved { get; set; }
 
+    [Inject]
+    IJSRuntime ThisJsRuntime { get; set; }
+
     LeaderboardItem Item { get; set; } = new LeaderboardItem();
 
     private string _responseMsg = "";
@@ -196,6 +213,15 @@ catch (Exception e)
     string _routeDataFileName = "";
     TimeSpan StartTimeSpan { get; set; }
     TimeSpan FinishTimeSpan { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (LeaderboardItemParam.Id != Item.Id)
+            Item = LeaderboardItemParam;
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
 
     void OnTrekkerSelected(object u)
     {

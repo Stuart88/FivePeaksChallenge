@@ -102,6 +102,10 @@
 </Modal>
 
 @code {
+
+    [Parameter]
+    public int RouteId { get; set; } = 0;
+
     private Modal _modalRef;
     private bool _modalShowing = false;
     private LeaderBoardFilter _filter = new LeaderBoardFilter();

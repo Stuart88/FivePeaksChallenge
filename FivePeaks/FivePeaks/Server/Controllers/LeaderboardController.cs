@@ -7,18 +7,16 @@ using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using FivePeaks.Server.Database;
+using FivePeaks.Server.Models;
 using FivePeaks.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Processing;
 
 namespace FivePeaks.Server.Controllers
 {
@@ -149,7 +147,7 @@ namespace FivePeaks.Server.Controllers
         {
             try
             {
-                var entry = _context.Leaderboard.Find(entryId);
+                var entry = await _context.Leaderboard.FindAsync(entryId);
 
                 if (!string.IsNullOrEmpty(entry.RouteData))
                 {
@@ -175,6 +173,78 @@ namespace FivePeaks.Server.Controllers
                 return Ok($"Error: {Shared.Helpers.Functions.ExceptionMessage(e)}");
             }
         }
+
+        [AllowAnonymous]
+        [HttpGet("[action]/{entryId}")]
+        public async Task<IActionResult> GetRouteDataAsGeoJSON(int entryId)
+        {
+            try
+            {
+                var entry = await _context.Leaderboard.FindAsync(entryId);
+                
+                if (entry == null)
+                    throw new Exception("No data found!");
+
+                if (!string.IsNullOrEmpty(entry.RouteData))
+                {
+                    XDocument xml = XDocument.Parse(entry.RouteData);
+
+                    if (xml.Document == null)
+                    {
+                        throw new Exception("Entry has no route data!");
+                    }
+
+                    if (entry.RouteDataType == ".gpx")
+                    {
+                        GpxClass gpx = new GpxClass();
+
+                        gpx.Name = xml.Document.Descendants().FirstOrDefault(x => x.Name.LocalName == "name")?.Value ?? "";
+                        gpx.Time = xml.Document.Descendants().FirstOrDefault(x => x.Name.LocalName == "time")?.Value ?? "";
+
+                        gpx.TrkPts = xml.Document.Descendants().Where(x => x.Name.LocalName == "trkpt").Select(s => new TrkPt
+                            {
+                                Elevation = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "ele")?.Value ?? "",
+                                Lat = s.Attribute("lat")?.Value ?? "",
+                                Long = s.Attribute("lon")?.Value ?? "",
+                                Time = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "time")?.Value ?? "",
+                            })
+                            .ToList();
+
+                        return Ok(new BasicHttpResponse<GeoJson>() { Ok = true, Data = gpx.ToGeoJson(entry.EntryName) });
+                    }
+                    else if (entry.RouteDataType == ".tcx")
+                    {
+                        TcxClass tcx = new TcxClass();
+
+                        tcx.Name = xml.Document.Descendants().FirstOrDefault(x => x.Name.LocalName == "Name")?.Value ?? "";
+
+                        tcx.Trackpoints = xml.Document.Descendants().Where(x => x.Name.LocalName == "Trackpoint").Select(s => new TrackPoint
+                        {
+                                Time = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "Time")?.Value ?? "",
+                                Position = new TcxPosition
+                                {
+                                    Lat = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "LatitudeDegrees")?.Value ?? "",
+                                    Long = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "LongitudeDegrees")?.Value ?? "",
+                                },
+                                Altitude = s.Descendants().FirstOrDefault(x => x.Name.LocalName == "AltitudeMeters")?.Value ?? ""
+                        })
+                            .ToList();
+
+                        return Ok(new BasicHttpResponse<GeoJson>() { Ok = true, Data = tcx.ToGeoJson(entry.EntryName) });
+                    }
+
+                    throw new Exception("Route data type not correct!");
+                }
+
+                throw new Exception("Nothing found!");
+
+            }
+            catch (Exception e)
+            {
+                return Ok(new BasicHttpResponse<object>(){Ok = false, Message = $"Error: {Shared.Helpers.Functions.ExceptionMessage(e)}" });
+            }
+        }
+
 
 
         [AllowAnonymous]

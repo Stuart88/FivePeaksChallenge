@@ -1,0 +1,22 @@
+﻿
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime;
+
+<Button Color="Color.Primary" Size="Size" @onclick="@(e => ViewRouteOnMap(EntryId))">View on Map  <span class="oi oi-share-boxed"></span></Button>
+
+
+@code {
+
+    [Parameter]
+    public ButtonSize Size { get; set; } = ButtonSize.Small;
+
+    [Parameter]
+    public int EntryId { get; set; }
+
+    private async Task ViewRouteOnMap(int entryId)
+    {
+        string url = $"/maps/route/{entryId}";
+        await JsRuntime.InvokeAsync<object>("open", url, "_blank");
+    }
+
+}

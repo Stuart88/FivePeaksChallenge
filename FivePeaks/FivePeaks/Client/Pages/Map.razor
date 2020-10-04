@@ -1,6 +1,7 @@
 ﻿
 
 @page "/maps/{LatLong}"
+@page "/maps/route/{RouteId}"
 @page "/maps"
 
 @using FivePeaks.Client.Helpers
@@ -18,10 +19,6 @@
                 <div id="map-frame" class="map-frame">
                     <div style="font-size: 32px; position: absolute;top:4px;left:4px;"><b>Loading...</b></div>
                 </div>
-                @*<div class="map-frame">
-                        <div style="font-size:32px"><b>Loading...</b></div>
-                        <iframe class="responsive-iframe" src="https://www.google.com/maps/d/u/0/embed?mid=1NyGWdTKvKwBzLbv1OGE7HoclnLz4a_FX"></iframe>
-                    </div>*@
             </TabPanel>
             <TabPanel Name="osmap">
                 <div class="white-opaque-box info-area-min-width mobile-scroller">
@@ -109,6 +106,9 @@
 @code{
 
     [Parameter]
+    public string RouteId { get; set; } = "0";
+
+    [Parameter]
     public string LatLong { get; set; } = ""; // must be of the form "lat,long", in URL form  43-343%2C2-31 (43.343,2.31)
 
     private readonly string[] _fileTypes = { "fit", "gpx", "kml", "tcx", "geojson" };
@@ -132,10 +132,10 @@
     {
         if (firstRender)
         {
-            if(LatLong != null)
+            if (LatLong != null)
                 LatLong = LatLong.Replace("point", ".").Replace("comma", ",");
 
-            await ThisJsRuntime.InvokeVoidAsync("setupLeaflet", LatLong);
+            await ThisJsRuntime.InvokeVoidAsync("setupLeaflet", LatLong, RouteId);
             await base.OnAfterRenderAsync(firstRender);
         }
     }

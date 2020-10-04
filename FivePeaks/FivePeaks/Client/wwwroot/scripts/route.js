@@ -1,6 +1,6 @@
 ﻿
 
-var geoson = {
+var geosonFivePeaksRoute = {
     "type": "FeatureCollection", "features": [
         { "type": "Feature", "geometry": { "type": "Point", "itemType" : "Start End",  "coordinates": [-2.31301, 54.3293681] }, "properties": { "time": "2020-09-13T00:00:00", "name": "Start  End", "popupContent": "Start / End (Moorcock Inn)", "desc": "Start / End (Moorcock Inn)", "sym": "Building" } },
         { "type": "Feature", "geometry": { "type": "Point", "itemType" : "Hill",  "coordinates": [-2.286336, 54.3438082] }, "properties": { "time": "2020-09-13T00:00:00", "name": "Tarn Hill ", "popupContent": "Tarn Hill (530m)", "desc": "Tarn Hill (530m)", "sym": "Flag, Blue" } },

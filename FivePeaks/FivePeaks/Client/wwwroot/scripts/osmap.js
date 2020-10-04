@@ -3,6 +3,7 @@
 var map;
 var zoom = 6;
 var apiKey;
+var geojson;
 var serviceUrl = 'https://api.os.uk/maps/raster/v1/zxy';
 var centreLatLong;
 
@@ -23,12 +24,6 @@ var mapOptions = {
         [54.417332, -2.3928738],    //upper left corner of 5 peaks route area
         [54.322531, -2.2161484]     //lower right corner
     ]
-};
-
-var lineStyle = {
-    "color": "#007bff",
-    "weight": 8,
-    "opacity": 1
 };
 
 function getMarkerOptions(feature) {
@@ -72,14 +67,16 @@ function pointToLayer(feature, latLng) {
 
 
 
-window.setupLeaflet = function (latLong) {
+window.setupLeaflet = function (latLong, routeId = 0) {
+
+    if (!routeId)
+        routeId = 0;
 
     fetch('/Site/GetApiKey/OSMap').then(function (response) {
         return response.json();
     }).then(function (data) {
 
-
-        if (!latLong || latLong.length === 0) {
+        if(!latLong || latLong.length === 0) {
             centreLatLong = [54.370259, -2.2972584];
             zoom = 6;
         }
@@ -92,29 +89,63 @@ window.setupLeaflet = function (latLong) {
 
         apiKey = data;
 
-
         var map = L.map('map-frame', mapOptions).setView(centreLatLong, zoom);
 
         // Load and display ZXY tile layer on the map.
         var basemap = L.tileLayer(serviceUrl + '/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey).addTo(map);
 
-        // add the OpenStreetMap tiles
-        L.tileLayer('https://b.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 9,
-            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-        }).addTo(map);
-
         // show the scale bar on the lower left corner
         L.control.scale().addTo(map);
 
-        L.geoJSON(geoson,
-            {
-                style: lineStyle,
-                onEachFeature: onEachFeature,
-                pointToLayer: pointToLayer
-            })
-            .addTo(map);
-        //geoson from scripts/route.js
+
+        fetch(`/Leaderboard/GetRouteDataAsGeoJSON/${routeId}`).then(function (response) {
+            return response.json();
+        }).then(function(geojsonResp) {
+
+
+            var geoJsonOK = false;
+
+            console.log(geojsonResp.data);
+            console.log(geojsonResp.ok);
+            if (geojsonResp.ok) {
+                geojson = geojsonResp.data;
+                console.log(geojson);
+                geoJsonOK = true;
+
+                const routeLineStyle = {
+                    "color": "#ff1500",
+                    "weight": 7,
+                    "opacity": 1
+                };
+
+                L.geoJSON(geojson,
+                        {
+                            style: routeLineStyle,
+                        })
+                    .addTo(map);
+            }
+
+            const mainLineStyle = {
+                "color": "#007bff",
+                "weight": geoJsonOK ? 6 : 8,
+                "opacity": geoJsonOK ? 0.6 : 1
+            };
+
+          
+
+            L.geoJSON(geosonFivePeaksRoute,
+                    {
+                        style: mainLineStyle,
+                        onEachFeature: onEachFeature,
+                        pointToLayer: pointToLayer
+                    })
+                .addTo(map);
+
+          
+     
+        });
+
+     
 
     }).catch(function (err) {
         // There was an error

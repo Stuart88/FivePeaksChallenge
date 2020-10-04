@@ -23,7 +23,7 @@
                     _ => "grey"
                 };
                 TimeSpan totalTime = item.FinishTime - item.StartTime;
-                <tr class="leaderboard-row hover-pointer" @onclick="@(e => ShowModal(item))">
+                <tr class="leaderboard-row hover-pointer" @onclick="@(e => SelectedEntryForModal(item))">
                     <td valign="middle" align="center" hidden="@IsPublicView">
                         <Tooltip Text="@StatusEnumString(item.Status)">
                             <MenuIcon FileName="@($"circle-{iconColour}.png")" />
@@ -92,7 +92,7 @@
                         </div>
                     </div>
                 }
-                <SubmitRoute LeaderboardItemParam="SelectedItem" User="@User" />
+                <SubmitRoute LeaderboardItemParam="@SelectedItem" User="@User" />
             </ModalBody>
             <ModalFooter>
                 <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
@@ -103,6 +103,7 @@
 
 
 @code{
+
 
     [Parameter]
     public UserAccount User { get; set; } = new UserAccount { Id = 0, Username = "" };
@@ -118,6 +119,8 @@
 
     [Parameter]
     public Action OnFilterChanged { get; set; }
+
+    private string _forceRenderer = DateTime.Now.Ticks.ToString();
 
     LeaderboardItem SelectedItem { get; set; }
 
@@ -139,16 +142,22 @@
 
     private void HideModal()
     {
+        SelectedItem = null;
         _modalRef.Hide();
     }
-    private void ShowModal(LeaderboardItem item)
+    private void ShowModal()
     {
-        SelectedItem = item;
-        this.StateHasChanged();
         _modalRef.Show();
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    private void SelectedEntryForModal(LeaderboardItem item)
+    {
+        SelectedItem = item;
+        this.ShowModal();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_submissionsList != null)
         {
@@ -204,8 +213,7 @@
             }
         }
 
-
-        base.OnAfterRender(firstRender);
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     async void DeleteItem(int id)

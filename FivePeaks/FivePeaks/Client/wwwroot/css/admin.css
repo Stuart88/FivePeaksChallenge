@@ -10,24 +10,27 @@
     opacity: 0.5;
     font-size: 9px;
 }
-.bottom-corner-admin-btn:hover {
-    opacity: 1;
-}
+
 
 .bottom-corner-insta-btn {
     position: absolute;
-    bottom: 0;
-    right: 5px;
-    background: white;
-    padding: 1px 7px;
+    background-color: transparent;
     margin: 3px;
-    opacity: 0.5;
     font-size: 9px;
+    bottom: 10px;
+    left: 20px;
+    z-index: 2;
 }
 
-.bottom-corner-insta-btn:hover {
-    opacity: 1;
-}
+    .bottom-corner-insta-btn img {
+        padding: 0 2px 0 2px;
+        height: 35px;
+        width: 35px;
+    }
+
+    .bottom-corner-insta-btn:hover {
+        opacity: 1;
+    }
 
 .admin-area {
     
@@ -37,4 +40,12 @@
     margin: auto;
     margin-top: 10%;
     padding: 5px;
+}
+
+@media screen and (max-width: 767.98px) {
+    .bottom-corner-insta-btn {
+        left: initial;
+        bottom: 0;
+        right: 5px;
+    }
 }

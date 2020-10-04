@@ -64,7 +64,7 @@
 }
 
 .background-image {
-    padding: 60px 5% 20px 5%;
+    padding: 60px 5% 60px 5%;
     background-size: cover;
     position: static;
     height: 100vh;
@@ -239,7 +239,7 @@
     .background-image {
         width: calc(100vw - 64px);
         left: 64px;
-        padding: 60px 2% 20px 2%;
+        padding: 60px 2% 60px 2%;
     }
 
     .full-page-width {

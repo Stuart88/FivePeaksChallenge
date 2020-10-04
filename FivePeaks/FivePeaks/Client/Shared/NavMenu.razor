@@ -1,24 +1,24 @@
 ﻿@inject ResizeListener Listener
 @using FivePeaks.Client.Helpers
 @implements IDisposable
-
+@inject NavigationManager NavigationManager
 
 <Bar Mode="BarMode.VerticalPopout"
      CollapseMode="BarCollapseMode.Small"
      Breakpoint="Breakpoint.Desktop"
      NavigationBreakpoint="Breakpoint.Desktop"
      ThemeContrast="ThemeContrast.Dark"
-     Visible="@_menuVisible"
->
+     Visible="@_menuVisible">
     <BarBrand>
         <BarItem>
             <BarLink To="">
-                <MenuIcon FileName="logo.png"/>
+                <MenuIcon FileName="logo.png" />
                 Five Peaks Challenge
             </BarLink>
         </BarItem>
 
-        <img id="menu-toggle"  src="@ServerHelpers.ImageSrcString($"icons/menu.svg")" @onclick="ToggleMenu" hidden="@(!_isSmall)" />
+        <img id="menu-toggle" src="@ServerHelpers.ImageSrcString($"icons/menu.svg")" @onclick="ToggleMenu" hidden="@(!_isSmall)" />
+        <img id="top-right-account-btn" class="hide-on-desktop" src="@ServerHelpers.ImageSrcString($"icons/user.png")" @onclick="@(e => NavigationManager.NavigateTo("/account/menu"))" />
 
     </BarBrand>
     <BarMenu>
@@ -61,7 +61,7 @@
             </BarItem>
             <BarItem>
                 <BarLink To="/thepeaks">
-                    <MenuIcon FileName="peaks.png"  />
+                    <MenuIcon FileName="peaks.png" />
                     The Peaks
                 </BarLink>
             </BarItem>
@@ -71,9 +71,9 @@
                     Gallery
                 </BarLink>
             </BarItem>
-            <BarItem>
+            <BarItem Class="hide-on-mobile">
                 <BarLink To="/account/menu">
-                    <MenuIcon  FileName="user.png"/>
+                    <MenuIcon FileName="user.png" />
                     My Account
                 </BarLink>
             </BarItem>
@@ -92,7 +92,7 @@
 
     BrowserWindowSize _browser = new BrowserWindowSize();
 
-    
+
 
     bool _menuVisible;
 

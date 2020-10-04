@@ -151,6 +151,14 @@
             document.body.removeChild(link);
         }
 
+        window.downloadLeaderboardRouteData = function (entryId) {
+            var link = document.createElement('a');
+            link.href = `/Leaderboard/GetRouteData/${entryId}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         window.toggleWeatherWidget = function(show) {
 
             let weatherWidgetHTML = document.getElementById("weather-widget").innerHTML;

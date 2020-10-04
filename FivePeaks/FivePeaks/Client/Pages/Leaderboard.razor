@@ -1,0 +1,149 @@
+﻿
+@page "/leaderboard"
+
+@using FivePeaks.Client.Pages.UserArea
+@using FivePeaks.Shared.Models
+
+
+<PageBase ImageNum="10">
+
+    <div hidden="@_modalShowing" class="white-opaque-box info-area-min-width" style="max-width: 700px">
+
+        <h3 class="page-title">Leaderboard</h3>
+
+        <div style="font-size:14px">
+            <NavLink href="/account/menu">Login</NavLink> to submit your own entry
+        </div>
+
+        <Divider></Divider>
+
+        <Fields Style="max-width:400px">
+            <Field ColumnSize="ColumnSize.Is8.OnMobile">
+                <TextEdit Placeholder="Filter" @bind-Text="@_filter.Name" />
+            </Field>
+            <Field ColumnSize="ColumnSize.Is4.OnMobile">
+                <Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@ShowModal">Advanced</Button>
+            </Field>
+        </Fields>
+
+        <div class="leaderboard-area">
+            <Submissions IsPublicView="true" Filter="_filter" />
+        </div>
+
+    </div>
+</PageBase>
+
+<Modal @ref="_modalRef">
+    <ModalContent IsCentered="true" Size="ModalSize.ExtraLarge">
+        <ModalHeader>
+            <ModalTitle>Advanced Filter</ModalTitle>
+            <CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody Style="align-self:center;width:100%;max-width:400px;">
+
+            <Field>
+                <FieldLabel Style="font-weight: bold">Name</FieldLabel>
+                <TextEdit Placeholder="" @bind-Text="@_filter.Name" />
+            </Field>
+
+            <Field>
+                <FieldLabel Style="font-weight: bold">Order By</FieldLabel>
+                <Select TValue="int" @bind-SelectedValue="@_filter.OrderByOption">
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.Newest)">Newest</SelectItem>
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.Oldest)">Oldest</SelectItem>
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.Fastest)">Fastest</SelectItem>
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.Slowest)">Slowest</SelectItem>
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.NameAtoZ)">A to Z</SelectItem>
+                    <SelectItem Value="@((int) LeaderBoardOrderByOption.NameZtoA)">Z to A</SelectItem>
+                </Select>
+            </Field>
+
+            <Field>
+                <FieldLabel Style="font-weight: bold">Direction</FieldLabel>
+                <RadioGroup TValue="int" Name="directions" @bind-CheckedValue="@_filter.Direction" Inline="true">
+                    <Radio TValue="int" Value="@((int) TrekDirection.Unknown)" Inline="true">Any</Radio>
+                    <Radio TValue="int" Value="@((int) TrekDirection.Clockwise)" Inline="true">Clockwise</Radio>
+                    <Radio TValue="int" Value="@((int) TrekDirection.Anticlockwise)" Inline="true">Anticlockwise</Radio>
+                </RadioGroup>
+            </Field>
+
+            <Field>
+                <FieldLabel Style="font-weight: bold">Season</FieldLabel>
+                <Select TValue="string" @bind-SelectedValue="@_filter.Season">
+                    @foreach (string s in _seasons)
+                    {
+                        <SelectItem Value="@s">@s</SelectItem>
+                    }
+                </Select>
+            </Field>
+
+            <FieldLabel Style="font-weight: bold">With Route Data</FieldLabel>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <Check TValue="bool" @bind-Checked="@_filter.HasGpxData">GPX Data</Check>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <Check TValue="bool" @bind-Checked="@_filter.HasTcxData">TCX Data</Check>
+                </Field>
+            </Fields>
+
+            <table style="width: 100%; margin-top: 50px;">
+                <tr>
+                    <td width="50%"><Button Color="Color.Secondary" style="width: 100%" @onclick="@ResetFilters">Reset</Button></td>
+                    <td width="50%"><Button Color="Color.Success" style="width: 100%" @onclick="@HideModal">OK</Button></td>
+                </tr>
+            </table>
+
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private Modal _modalRef;
+    private bool _modalShowing = false;
+    private LeaderBoardFilter _filter = new LeaderBoardFilter();
+
+    private void HideModal()
+    {
+        _modalShowing = false;
+        _modalRef.Hide();
+    }
+    private void ShowModal()
+    {
+        _modalShowing = true;
+        _modalRef.Show();
+    }
+
+    private void ResetFilters()
+    {
+        this._filter = new LeaderBoardFilter();
+        this.StateHasChanged();
+    }
+
+    private readonly List<string> _seasons = new List<string> { "Any", "Spring", "Summer", "Autumn", "Winter" };
+
+    public class LeaderBoardFilter
+    {
+        public string Name { get; set; } = "";
+        public int Direction { get; set; } = (int)FivePeaks.Shared.Models.TrekDirection.Unknown;
+        public string Season { get; set; } = "Any";
+        public bool HasGpxData { get; set; } = false;
+        public bool HasTcxData { get; set; } = false;
+        public int OrderByOption { get; set; } = (int)LeaderBoardOrderByOption.Newest;
+    }
+
+    public enum LeaderBoardOrderByOption
+    {
+        Newest,
+        Oldest,
+        Fastest,
+        Slowest,
+        NameAtoZ,
+        NameZtoA,
+    }
+
+
+}

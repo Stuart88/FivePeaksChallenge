@@ -2,10 +2,11 @@
 @using Blazorise.Components
 @using System.IO
 @inject HttpClient Http
+@inject IJSRuntime JsRuntime
 
 @try
 {
-    <div style="text-align: left; padding: 10px 10px 100px 10px; max-width: 600px">
+    <div style="text-align: left; padding: 10px 10px 100px 10px; max-width: 600px;width:100%;margin:auto">
         <Field>
             <FieldLabel Style="font-weight: bold">Entry Name</FieldLabel>
             <TextEdit Placeholder="Entry Name" @bind-Text="@Item.EntryName" Disabled="@(_saving || _readOnly)">
@@ -76,7 +77,18 @@
             {
                 if (!string.IsNullOrEmpty(Item.RouteDataType))
                 {
-                    <div style="font-style: italic">@Item.RouteDataType file submitted</div>
+                    <table>
+                        <tr>
+                            <td>
+                                <div style="font-style: italic;margin-right:3px">
+                                    @Item.RouteDataType file submitted
+                                </div>
+                            </td>
+                            <td>
+                                <DownloadRouteDataButton Size="ButtonSize.Small" EntryId="Item.Id"/>
+                            </td>
+                        </tr>
+                    </table>
                 }
                 else
                 {
@@ -112,16 +124,9 @@
         <Field>
             <FieldLabel Style="font-weight: bold">Notes</FieldLabel>
             <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.Notes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
-            @if(!_readOnly){<FieldHelp>Got any extra comments? Add them here.</FieldHelp>}
+            @if(!_readOnly){<FieldHelp>Got any extra comments about the trek? How was it?</FieldHelp>}
         </Field>
-
-        <table style="width: 100%; margin-top: 50px;" hidden="@_readOnly">
-            <tr>
-                <td width="25%"><Button Color="Color.Danger" style="width: 100%" Disabled="@_saving" @onclick="@CancelBtnClicked">Cancel</Button></td>
-                <td width="75%"><Button Color="Color.Primary" style="width: 100%" Disabled="@_saving" @onclick="@SubmitItem">Save</Button></td>
-            </tr>
-        </table>
-
+        
         <br />
 
         <img hidden="@(!_saving)" style="width: 100px; height: 100px; align-self: center" src="images/icons/loading.gif" />
@@ -141,6 +146,21 @@
         {
             <div style="color: red">@_responseMsg</div>
         }
+
+
+    <div hidden="@(_saving || _readOnly)">
+        <div style="color: red; font-weight: bold;margin-top: 50px;">
+            NOTE: Entries cannot be amended after submission
+        </div>
+        <table style="width: 100%; margin-top: 10px;">
+            <tr>
+                <td width="25%"><Button Color="Color.Danger" style="width: 100%" Disabled="@_saving" @onclick="@CancelBtnClicked">Cancel</Button></td>
+                <td width="75%"><Button Color="Color.Primary" style="width: 100%" Disabled="@_saving" @onclick="@SubmitItem">Save</Button></td>
+            </tr>
+        </table>
+    </div>
+
+       
     </div>
 }
 catch (Exception e)
@@ -337,10 +357,11 @@ catch (Exception e)
 
             string fileExtenstion = Path.GetExtension(file.Name);
 
-            _routeDataFileName = file.Name;
 
             if (fileExtenstion == ".gpx" || fileExtenstion == ".tcx")
             {
+                _routeDataFileName = file.Name;
+
                 // A stream is going to be the destination stream we're writing to.
                 await using var stream = new MemoryStream();
 
@@ -357,6 +378,10 @@ catch (Exception e)
                 using var reader = new StreamReader(stream);
                 Item.RouteData = await reader.ReadToEndAsync();
                 Item.RouteDataType = fileExtenstion;
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Invalid file type!");
             }
 
 

@@ -12,6 +12,7 @@
     <PackageReference Include="Blazor-Analytics" Version="3.1.2" />
     <PackageReference Include="Blazorise.Bootstrap" Version="0.9.1.2" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.1.2" />
+    <PackageReference Include="GDAL.Native" Version="2.4.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />

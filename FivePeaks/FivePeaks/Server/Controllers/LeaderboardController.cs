@@ -4,7 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Schema;
 using FivePeaks.Server.Database;
 using FivePeaks.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +40,11 @@ namespace FivePeaks.Server.Controllers
         {
             try
             {
+                if (!string.IsNullOrEmpty(leaderboardItem.RouteData) && leaderboardItem.RouteData.Length > 0)
+                {
+                    CheckValidXml(leaderboardItem.RouteData, leaderboardItem.RouteDataType);
+                }
+
                 LeaderboardItem entry = await _context.Leaderboard.AsNoTracking().FirstOrDefaultAsync(x => x.Id == leaderboardItem.Id);
 
                 if (entry == null)
@@ -62,6 +70,30 @@ namespace FivePeaks.Server.Controllers
                 return Ok(new BasicHttpResponse<object> { Ok = false, Message = Shared.Helpers.Functions.ExceptionMessage(e) });
             }
         }
+
+        private void CheckValidXml(string xml, string fileType)
+        {
+            try
+            {
+                Regex tagsWithData = new Regex("<\\w+>[^<]+</\\w+>");
+
+                //Light checking
+                if (string.IsNullOrEmpty(xml) || tagsWithData.IsMatch(xml) == false)
+                {
+                    throw new Exception("Badly formed document!");
+                }
+
+                XmlDocument xmlDocument = new XmlDocument();
+                xmlDocument.LoadXml(xml);
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Route Data Error: {Shared.Helpers.Functions.ExceptionMessage(e)}");
+            }
+        }
+
+
 
         [AllowAnonymous]
         [HttpGet("[action]")]
@@ -89,16 +121,58 @@ namespace FivePeaks.Server.Controllers
         {
             try
             {
-                var items = _context.Leaderboard
-                    .Where(i => i.PostedByUserId == userId || userId == 0)
-                    .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
-                    .ToList();
-                
+                var items = userId == 0
+
+                    // public, so get all accepted.
+                    ? _context.Leaderboard
+                        .Where(i => i.Status == LeaderboardEntryState.Accepted)
+                        .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
+                        .ToList()
+
+                    //items for specific user
+                    : _context.Leaderboard
+                        .Where(i => i.PostedByUserId == userId)
+                        .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
+                        .ToList();
+
                 return Ok(new BasicHttpResponse<List<LeaderboardItem>> { Ok = true, Data = items });
             }
             catch (Exception e)
             {
                 return Ok(new BasicHttpResponse<object> { Ok = false, Message = e.Message });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("[action]/{entryId}")]
+        public async Task<IActionResult> GetRouteData(int entryId)
+        {
+            try
+            {
+                var entry = _context.Leaderboard.Find(entryId);
+
+                if (!string.IsNullOrEmpty(entry.RouteData))
+                {
+                   
+                    MemoryStream ms = new MemoryStream();
+                    TextWriter tw = new StreamWriter(ms);
+
+                    await tw.WriteAsync(entry.RouteData);
+
+                    await tw.FlushAsync();
+
+                    byte[] bytes = ms.ToArray();
+                    ms.Close();
+
+                    return File(bytes, $"application/{entry.RouteDataType.Replace(".", "")}+xml", $"{entry.TrekDate:dd-MMM-yyyy}_{entry.EntryName}{entry.RouteDataType}");
+                }
+
+                throw new Exception("Nothing found!");
+
+            }
+            catch (Exception e)
+            {
+                return Ok($"Error: {Shared.Helpers.Functions.ExceptionMessage(e)}");
             }
         }
 

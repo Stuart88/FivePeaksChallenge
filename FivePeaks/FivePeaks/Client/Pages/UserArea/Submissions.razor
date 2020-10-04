@@ -3,25 +3,28 @@
 @inject IJSRuntime JsRuntime;
 
 <div style="padding: 5px">
-    
+
     <table style="width: 100%">
         <tr style="border-bottom: 2px solid dimgrey;">
-            <th align="center" style="width:60px;text-align:center">Status</th>
-            <th>Submission</th>
-            <th></th>
+            <th align="center" style="width:60px;text-align:center" hidden="@IsPublicView">Status</th>
+            <th>Entry</th>
+            <th>Time</th>
         </tr>
-        @if (SubmissionsList.Count > 0)
+        @if (SubmissionsListForView.Count > 0)
         {
-            foreach (var item in SubmissionsList)
+            foreach (var item in SubmissionsListForView)
             {
-                string iconColour = item.Status switch{
+                string iconColour = item.Status switch
+                {
                     LeaderboardEntryState.Pending => "grey",
                     LeaderboardEntryState.Accepted => "green",
                     LeaderboardEntryState.NeedMoreInfo => "orange",
                     LeaderboardEntryState.Rejected => "red",
-                    _ => "grey"};
-                <tr>
-                    <td valign="middle" align="center">
+                    _ => "grey"
+                };
+                TimeSpan totalTime = item.FinishTime - item.StartTime;
+                <tr class="leaderboard-row hover-pointer" @onclick="@(e => ShowModal(item))">
+                    <td valign="middle" align="center" hidden="@IsPublicView">
                         <Tooltip Text="@StatusEnumString(item.Status)">
                             <MenuIcon FileName="@($"circle-{iconColour}.png")" />
                         </Tooltip>
@@ -31,11 +34,13 @@
                             @item.EntryName
                         </div>
                         <div style="font-size:12px; color: gray; font-style: italic;margin-bottom:5px">
-                            @item.PostDate.ToString("dd-MMM-yyyy")
+                            @item.TrekDate.ToString("dd-MMM-yyyy")
                         </div>
                     </td>
-                    <td valign="middle" align="right" width="53px">
-                        <Button Color="Color.Primary" Size="ButtonSize.Small" @onclick="@(e => ShowModal(item))">View</Button>
+                    <td width="95px">
+                        <div style="color: green;font-size: 15px;">
+                            @($"{totalTime.Hours}hrs {totalTime.Minutes}m")
+                        </div>
                     </td>
                 </tr>
             }
@@ -48,17 +53,20 @@
         }
     </table>
 
-    <br />
-    <br />
-    <br />
+    @if (!IsPublicView)
+    {
+        <br />
+        <br />
+        <br />
 
-    <div style="max-width:200px; margin: auto;">
-        <Button Color="Color.Danger" style="width: 100%" @onclick="@CancelBtnClicked">Back</Button>
-    </div>
-    
-    <br />
-    <br />
-    <br />
+        <div style="max-width:200px; margin: auto;">
+            <Button Color="Color.Danger" style="width: 100%" @onclick="@CancelBtnClicked">Back</Button>
+        </div>
+
+        <br />
+        <br />
+        <br />
+    }
 </div>
 
 <Modal @ref="_modalRef">
@@ -67,9 +75,9 @@
     {
         <ModalContent IsCentered="true" Size="ModalSize.ExtraLarge">
             <ModalHeader>
-                <CloseButton Clicked="@HideModal"/>
+                <CloseButton Clicked="@HideModal" />
             </ModalHeader>
-            <ModalBody>
+            <ModalBody Style="align-self:center;width:100%">
                 @if (SelectedItem.Status != LeaderboardEntryState.Accepted)
                 {
                     <div style="margin:auto; max-width: 400px; text-align: center;">
@@ -77,14 +85,14 @@
                         <br />
                         <br />
                         If you want to make changes, please delete this entry and submit a new one.
-                        <br/>
-                        <br/>
+                        <br />
+                        <br />
                         <div style="margin: auto; display: inline-block;">
                             <Button Color="Color.Danger" Size="ButtonSize.Small" @onclick="@(e => DeleteItem(SelectedItem.Id))">Delete</Button>
                         </div>
                     </div>
                 }
-                <SubmitRoute LeaderboardItemParam="SelectedItem" User="@User"/>
+                <SubmitRoute LeaderboardItemParam="SelectedItem" User="@User" />
             </ModalBody>
             <ModalFooter>
                 <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
@@ -97,15 +105,25 @@
 @code{
 
     [Parameter]
-    public UserAccount User { get; set; }
+    public UserAccount User { get; set; } = new UserAccount { Id = 0, Username = "" };
 
     [Parameter]
     public Action BackToMenu { get; set; }
 
+    [Parameter]
+    public bool IsPublicView { get; set; }
+
+    [Parameter]
+    public Leaderboard.LeaderBoardFilter Filter { get; set; } = new Leaderboard.LeaderBoardFilter();
+
+    [Parameter]
+    public Action OnFilterChanged { get; set; }
+
     LeaderboardItem SelectedItem { get; set; }
 
     private string _responseMsg = "";
-    List<LeaderboardItem> SubmissionsList { get; set; } = new List<LeaderboardItem>();
+    private List<LeaderboardItem> _submissionsList;
+    private List<LeaderboardItem> SubmissionsListForView { get; set; } = new List<LeaderboardItem>();
     private Modal _modalRef;
 
     protected override async Task OnInitializedAsync()
@@ -130,6 +148,66 @@
         _modalRef.Show();
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_submissionsList != null)
+        {
+            IEnumerable<LeaderboardItem> items = _submissionsList.Where(i =>
+
+                (i.EntryName.ToLower().Contains(Filter.Name?.ToLower() ?? "") || string.IsNullOrEmpty(Filter.Name))
+                &&
+                (i.Direction == (TrekDirection)Filter.Direction || Filter.Direction == (int)TrekDirection.Unknown)
+                &&
+                (i.Season == Filter.Season || Filter.Season == "Any")
+                &&
+                (
+                    (Filter.HasGpxData && Filter.HasTcxData && (i.RouteDataType == ".gpx" || i.RouteDataType == ".tcx"))
+                    ||
+                    (Filter.HasGpxData && !Filter.HasTcxData && (i.RouteDataType == ".gpx"))
+                    ||
+                    (!Filter.HasGpxData && Filter.HasTcxData && (i.RouteDataType == ".tcx"))
+                    ||
+                    (!Filter.HasGpxData && !Filter.HasTcxData)
+                    )
+                );
+
+
+            switch ((Leaderboard.LeaderBoardOrderByOption)Filter.OrderByOption)
+            {
+                case Leaderboard.LeaderBoardOrderByOption.Newest:
+                    SubmissionsListForView = items.OrderByDescending(i => i.TrekDate).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.Oldest:
+                    SubmissionsListForView = items.OrderBy(i => i.TrekDate).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.Fastest:
+                    SubmissionsListForView = items.OrderBy(i => i.FinishTime - i.StartTime).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.Slowest:
+                    SubmissionsListForView = items.OrderByDescending(i => i.FinishTime - i.StartTime).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.NameAtoZ:
+                    SubmissionsListForView = items.OrderBy(i => i.EntryName).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.NameZtoA:
+                    SubmissionsListForView = items.OrderByDescending(i => i.EntryName).ToList();
+                    break;
+
+                default:
+                    SubmissionsListForView = items.OrderByDescending(i => i.TrekDate).ToList();
+                    break;
+            }
+        }
+
+
+        base.OnAfterRender(firstRender);
+    }
+
     async void DeleteItem(int id)
     {
         bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
@@ -140,7 +218,7 @@
 
             if (resp.Ok)
             {
-                SubmissionsList.Remove(SubmissionsList.FirstOrDefault(b => b.Id == id));
+                _submissionsList.Remove(_submissionsList.FirstOrDefault(b => b.Id == id));
                 SelectedItem = null;
                 this.StateHasChanged();
                 HideModal();
@@ -171,7 +249,7 @@
 
             if (resp.Ok)
             {
-                SubmissionsList = resp.Data;
+                _submissionsList = resp.Data;
                 this.StateHasChanged();
             }
             else

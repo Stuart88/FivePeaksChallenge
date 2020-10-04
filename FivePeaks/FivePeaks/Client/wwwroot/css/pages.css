@@ -211,7 +211,7 @@
     flex-direction: column;
 }
 .hide-on-mobile {
-    display: initial;
+    display: revert;
 }
 .hide-on-desktop {
     display: none;
@@ -224,6 +224,19 @@
 }
 .mobile-menu-account-btn a:hover {
     background-color: cornflowerblue;
+}
+.leaderboard-row {
+    background: #eee;
+    border-bottom: 1px solid #999;
+}
+    .leaderboard-row:hover {
+        background: #dad9d9;
+        transition: background 250ms
+    }
+
+.leaderboard-area {
+    height: calc(100vh - 305px);
+    overflow: auto;
 }
 @media screen and (max-width: 767.98px) {
 
@@ -242,7 +255,7 @@
         display:none;
     }
     .hide-on-desktop {
-        display:initial;
+        display:revert;
     }
 
     .background-image {
@@ -268,5 +281,8 @@
     .about-text {
         font-size: 15px;
     }
-
+    .leaderboard-area {
+        height: calc(100vh - 280px);
+        overflow: auto;
+    }
 }

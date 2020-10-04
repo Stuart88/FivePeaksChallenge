@@ -1,0 +1,21 @@
+﻿
+
+    <Button Color="Color.Primary" Size="Size" @onclick="@(e => DownloadRouteDataAsync(EntryId))">Download</Button>
+
+    @code {
+
+        [Parameter]
+        public ButtonSize Size { get; set; } = ButtonSize.Small;
+
+        [Parameter] 
+        public int EntryId { get; set; }
+
+        [Inject]
+        IJSRuntime ThisJsRuntime { get; set; }
+
+        private async Task DownloadRouteDataAsync(int entryId)
+        {
+            await ThisJsRuntime.InvokeVoidAsync("downloadLeaderboardRouteData", entryId);
+        }
+
+}

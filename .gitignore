@@ -7,6 +7,6 @@ artifacts/
 .dotnet/
 *.binlog
 Other Bits/
-.db
-.db-shm
-.db-wal
+*.db
+*.db-shm
+*.db-wal

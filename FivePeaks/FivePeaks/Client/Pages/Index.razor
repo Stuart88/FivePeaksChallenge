@@ -1,9 +1,10 @@
 ﻿@page "/"
 @using FivePeaks.Client.Helpers
+@inject NavigationManager NavigationManager
 
 <PageBase ImageNum="5">
     <div id="home-page-text-area" class="white-opaque-box info-area-min-width">
-      
+
         <img style="max-height:100px;max-width:100px" src="@ServerHelpers.ImageSrcString("icons/logo.png")" />
 
         <h1 class="page-title">The Five Peaks Challenge</h1>
@@ -63,14 +64,106 @@
                     </td>
                 </tr>
             </table>
+            
+            <table @onclick="@(() => NavigationManager.NavigateTo("/account"))">
+                <tr>
+                    <td>
+                        <MenuIcon FileName="user.png" />
+                    </td>
+                    <td>
+                        <div class="home-info-section-title">
+                            Click <NavLink href="/account">here</NavLink> to login and submit your own leaderboard entry!
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div>
+
+                <img @onclick="@(() => NavigationManager.NavigateTo("/maps"))" class="img-fluid rounded" style="margin: 20px auto" src="@ServerHelpers.ImageSrcString($"siteimages/full-route.jpg")" />
+                <table @onclick="@(() => NavigationManager.NavigateTo("/maps"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="map.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                For maps and GPX data, go to the <NavLink href="/maps">maps page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table @onclick="@(() => NavigationManager.NavigateTo("/route"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="route.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                For a detailed route guide, have a look at the <NavLink href="/route">route page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table @onclick="@(() => NavigationManager.NavigateTo("/thepeaks"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="peaks.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                You can know more about each of the peaks on the <NavLink href="/thepeaks">peaks page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table @onclick="@(() => NavigationManager.NavigateTo("/leaderboard"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="trophy.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                See fastest times (or submit your own) via the <NavLink href="/leaderboard">leaderboard page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table @onclick="@(() => NavigationManager.NavigateTo("/weather"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="weather.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                Check the latest weather forecast on the <NavLink href="/weather">weather page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table @onclick="@(() => NavigationManager.NavigateTo("/gallery"))">
+                    <tr>
+                        <td>
+                            <MenuIcon FileName="gallery.png" />
+                        </td>
+                        <td>
+                            <div class="home-info-section-title">
+                                Finally, don't forget to take a look at our photos on the <NavLink href="/gallery">gallery page</NavLink>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
         </div>
     </div>
 </PageBase>
 
 
 @code{
-    
+
     bool _smallScreen;
+
 
     protected override void OnAfterRender(bool firstRender)
     {

@@ -129,17 +129,32 @@
         }
     <Field>
         <FieldLabel Style="font-weight: bold">Extra Verification</FieldLabel>
-
-        <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.SubmissionNotes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
-
         @if (!_readOnly)
-        {<FieldHelp>Add any other details or links to social media, photo albums, blogs etc which may help to verify your submission</FieldHelp>}
+        {
+            <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.SubmissionNotes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
+            <FieldHelp>Add any other details or links to social media, photo albums, blogs etc which may help to verify your submission</FieldHelp>
+        }
+        else
+        {
+            <div style="color:#666">
+                @(string.IsNullOrEmpty(Item.SubmissionNotes) ? "None" : Item.SubmissionNotes)
+            </div>
+        }
     </Field>
-        <Field>
-            <FieldLabel Style="font-weight: bold">Notes</FieldLabel>
-            <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.Notes)" @bind-value:event="oninput" Style="min-height: 100px;"></textarea>
-            @if(!_readOnly){<FieldHelp>Got any extra comments about the trek? How was it?</FieldHelp>}
-        </Field>
+    <Field>
+        <FieldLabel Style="font-weight: bold">Notes</FieldLabel>
+        @if (!_readOnly)
+        {
+            <textarea disabled="@(_saving || _readOnly)" class="form-control" @bind-value="@(Item.Notes)" @bind-value:event="oninput" Style="min-height: 150px;"></textarea>
+            <FieldHelp>Got any extra comments about the trek? How was it?</FieldHelp>
+        }
+        else
+        {
+            <div style="color:#666">
+                @(string.IsNullOrEmpty(Item.Notes) ? "None" : Item.Notes)
+            </div>
+        }
+    </Field>
         
         <br />
 

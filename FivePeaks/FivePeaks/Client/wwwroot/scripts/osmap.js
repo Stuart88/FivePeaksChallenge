@@ -72,15 +72,26 @@ window.setupLeaflet = function (latLong, routeId = 0) {
     if (!routeId)
         routeId = 0;
 
+
+    console.log(screen.width);
     fetch('/Site/GetApiKey/OSMap').then(function (response) {
         return response.json();
     }).then(function (data) {
 
-        if(!latLong || latLong.length === 0) {
+        mapOptions.minZoom = 6;
+
+        if (screen.width < 1000)
+            mapOptions.minZoom = 5;
+        if (screen.width < 450)
+            mapOptions.minZoom = 4;
+
+        if (!latLong || latLong.length === 0) {
+            //general map
             centreLatLong = [54.370259, -2.2972584];
-            zoom = 6;
+            zoom = mapOptions.minZoom;
         }
         else {
+            //map with specified co-ords to zoom to
             var lat = latLong.split(",")[0];
             var long = latLong.split(",")[1];
             centreLatLong = [lat, long];
@@ -105,11 +116,8 @@ window.setupLeaflet = function (latLong, routeId = 0) {
 
             var geoJsonOK = false;
 
-            console.log(geojsonResp.data);
-            console.log(geojsonResp.ok);
             if (geojsonResp.ok) {
                 geojson = geojsonResp.data;
-                console.log(geojson);
                 geoJsonOK = true;
 
                 const routeLineStyle = {

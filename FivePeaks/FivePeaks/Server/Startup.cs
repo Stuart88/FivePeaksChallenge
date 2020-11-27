@@ -86,10 +86,7 @@ namespace FivePeaks.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                //endpoints.MapFallbackToController("Index", "Site");
                 endpoints.MapFallbackToPage("/BaseIndex");
-                //endpoints.MapFallbackToFile("index.html");
-
             });
         }
     }

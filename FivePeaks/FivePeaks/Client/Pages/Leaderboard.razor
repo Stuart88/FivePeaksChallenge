@@ -55,6 +55,14 @@
                     <SelectItem Value="@((int) LeaderBoardOrderByOption.Slowest)">Slowest</SelectItem>
                     <SelectItem Value="@((int) LeaderBoardOrderByOption.NameAtoZ)">A to Z</SelectItem>
                     <SelectItem Value="@((int) LeaderBoardOrderByOption.NameZtoA)">Z to A</SelectItem>
+                    @if (Helpers.SessionState.AdminLoggedIn)
+                    {
+                        <SelectGroup Label="Admin">
+                            <SelectItem Value="@((int) LeaderBoardOrderByOption.Pending)">Pending</SelectItem>
+                            <SelectItem Value="@((int) LeaderBoardOrderByOption.Rejected)">Rejected</SelectItem>
+                            <SelectItem Value="@((int) LeaderBoardOrderByOption.NeedsInfo)">Needs Info</SelectItem>
+                        </SelectGroup>
+                    }
                 </Select>
             </Field>
 
@@ -136,7 +144,7 @@
         public string Season { get; set; } = "Any";
         public bool HasGpxData { get; set; } = false;
         public bool HasTcxData { get; set; } = false;
-        public int OrderByOption { get; set; } = (int)LeaderBoardOrderByOption.Fastest;
+        public int OrderByOption { get; set; } = Helpers.SessionState.AdminLoggedIn ? (int)LeaderBoardOrderByOption.Pending : (int)LeaderBoardOrderByOption.Fastest;
     }
 
     public enum LeaderBoardOrderByOption
@@ -147,6 +155,9 @@
         Slowest,
         NameAtoZ,
         NameZtoA,
+        Pending,
+        Rejected,
+        NeedsInfo
     }
 
 

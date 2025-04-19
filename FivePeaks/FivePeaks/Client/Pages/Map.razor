@@ -145,7 +145,7 @@
 
     string _selectedTab = "online";
 
-    private bool HasRouteId => RouteId != "0";
+    private bool HasRouteId => RouteId != null && RouteId != "0" && RouteId != string.Empty;
 
     private void OnSelectedTabChanged(string name)
     {

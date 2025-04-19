@@ -9,6 +9,7 @@
             <th align="center" style="width:60px;text-align:center" hidden="@IsPublicView">Status</th>
             <th>Entry</th>
             <th>Time</th>
+            <th align="center" style="text-align:center" hidden="@(!Helpers.SessionState.AdminLoggedIn)">Admin</th>
         </tr>
         @if (SubmissionsListForView.Count > 0)
         {
@@ -23,13 +24,13 @@
                     _ => "grey"
                 };
                 TimeSpan totalTime = item.FinishTime - item.StartTime;
-                <tr class="leaderboard-row hover-pointer" @onclick="@(e => SelectedEntryForModal(item))">
-                    <td valign="middle" align="center" hidden="@IsPublicView">
+                <tr class="leaderboard-row hover-pointer">
+                    <td valign="middle" align="center" hidden="@IsPublicView" @onclick="@(e => SelectedEntryForModal(item))">
                         <Tooltip Text="@StatusEnumString(item.Status)">
                             <MenuIcon FileName="@($"circle-{iconColour}.png")" />
                         </Tooltip>
                     </td>
-                    <td valign="middle">
+                    <td valign="middle" @onclick="@(e => SelectedEntryForModal(item))">
                         <div>
                             @item.EntryName
                         </div>
@@ -37,11 +38,19 @@
                             @item.TrekDate.ToString("dd-MMM-yyyy")
                         </div>
                     </td>
-                    <td width="95px">
+                    <td width="95px" @onclick="@(e => SelectedEntryForModal(item))">
                         <div style="color: green;font-size: 15px;">
                             @($"{totalTime.Hours}hrs {totalTime.Minutes}m")
                         </div>
                     </td>
+                     <td align="center" style="width:auto" hidden="@(!Helpers.SessionState.AdminLoggedIn)">
+                         <Select TValue="int" SelectedValue="@((int)item.Status)" SelectedValueChanged="(val) => ToggleItemStatus(item, val)">
+                            <SelectItem Value="@((int) LeaderboardEntryState.Accepted)">Accepted</SelectItem>
+                            <SelectItem Value="@((int) LeaderboardEntryState.Pending)">Pending</SelectItem>
+                            <SelectItem Value="@((int) LeaderboardEntryState.NeedMoreInfo)">Need Info</SelectItem>
+                            <SelectItem Value="@((int) LeaderboardEntryState.Rejected)">Rejected</SelectItem>
+                        </Select>
+                     </td>
                 </tr>
             }
         }
@@ -156,6 +165,24 @@
         this.ShowModal();
     }
 
+    public async void ToggleItemStatus(LeaderboardItem item, int val)
+    {
+        item.Status = (LeaderboardEntryState)val;
+        Helpers.HttpPostHelper<object> req = new Helpers.HttpPostHelper<object>("Leaderboard/UpdateItem", item);
+
+        BasicHttpResponse<object> resp = await req.SendAsync<object>(Http);
+
+        if (resp.Ok)
+        {
+            await GetSubmissions();
+            this.StateHasChanged();
+        }
+        else
+        {
+            _responseMsg = resp.Message;
+        }
+    }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -207,6 +234,24 @@
                     SubmissionsListForView = items.OrderByDescending(i => i.EntryName).ToList();
                     break;
 
+                case Leaderboard.LeaderBoardOrderByOption.Pending:
+                    SubmissionsListForView = items.OrderByDescending(i => i.Status == LeaderboardEntryState.Pending)
+                    .ThenByDescending(i => i.Status != LeaderboardEntryState.Accepted)
+                    .ThenByDescending(i => i.TrekDate).ToList();
+                    break;
+
+                case Leaderboard.LeaderBoardOrderByOption.Rejected:
+                    SubmissionsListForView = items.OrderByDescending(i => i.Status == LeaderboardEntryState.Rejected)
+                    .ThenByDescending(i => i.Status != LeaderboardEntryState.Accepted)
+                    .ThenByDescending(i => i.TrekDate).ToList();
+                break;
+
+                case Leaderboard.LeaderBoardOrderByOption.NeedsInfo:
+                    SubmissionsListForView = items.OrderByDescending(i => i.Status == LeaderboardEntryState.NeedMoreInfo)
+                    .ThenByDescending(i => i.Status != LeaderboardEntryState.Accepted)
+                    .ThenByDescending(i => i.TrekDate).ToList();
+                break;
+
                 default:
                     SubmissionsListForView = items.OrderByDescending(i => i.TrekDate).ToList();
                     break;
@@ -250,8 +295,8 @@
         try
         {
             _responseMsg = "";
-
-            BasicHttpResponse<List<LeaderboardItem>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<LeaderboardItem>>>($"Leaderboard/GetSubmissions/{User.Id}");
+            int userID = Helpers.SessionState.AdminLoggedIn ? -1 : User.Id;
+            BasicHttpResponse<List<LeaderboardItem>> resp = await Http.GetFromJsonAsync<BasicHttpResponse<List<LeaderboardItem>>>($"Leaderboard/GetSubmissions/{userID}");
 
             _responseMsg = resp.Message;
 

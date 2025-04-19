@@ -56,12 +56,12 @@ namespace FivePeaks.Server.Controllers
                     leaderboardItem.Id = entry.Id;
                     leaderboardItem.RouteData = entry.RouteData;
 
-                    _context.Leaderboard.Attach(leaderboardItem);
+                    _context.Leaderboard.Update(leaderboardItem);
                 }
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new BasicHttpResponse<object> { Ok = true});
+                return Ok(new BasicHttpResponse<object> { Ok = true, Data = leaderboardItem});
             }
             catch (Exception e)
             {
@@ -119,19 +119,24 @@ namespace FivePeaks.Server.Controllers
         {
             try
             {
-                var items = userId == 0
 
-                    // public, so get all accepted.
-                    ? _context.Leaderboard
+                var items = userId switch
+                {
+                    // Admin
+                    -1 => _context.Leaderboard
+                        .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
+                        .ToList(),
+                    // Public
+                    0 => _context.Leaderboard
                         .Where(i => i.Status == LeaderboardEntryState.Accepted)
                         .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
-                        .ToList()
-
-                    //items for specific user
-                    : _context.Leaderboard
+                        .ToList(),
+                    // Specific userId
+                    _ => _context.Leaderboard
                         .Where(i => i.PostedByUserId == userId)
                         .Select(s => Helpers.Helpers.LeaderboardItemWithoutRouteData(s))
-                        .ToList();
+                        .ToList()
+                };
 
                 return Ok(new BasicHttpResponse<List<LeaderboardItem>> { Ok = true, Data = items });
             }

@@ -1,6 +1,4 @@
-﻿
-
-@page "/maps/{LatLong}"
+﻿@page "/maps/{LatLong}"
 @page "/maps/route/{RouteId}"
 @page "/maps"
 
@@ -16,9 +14,41 @@
         </Items>
         <Content>
             <TabPanel Name="online">
-                <div id="map-frame" class="map-frame">
-                    <div style="font-size: 32px; position: absolute;top:4px;left:4px;"><b>Loading...</b></div>
+                <div class="map-container">
+                    <div id="map-frame" class="map-frame">
+                        <div style="font-size: 32px; position: absolute;top:4px;left:4px;"><b>Loading...</b></div>
+                    </div>
+                    @if(HasRouteId)
+                    {
+                        <div class="map-legend">
+                            <Table Hoverable="true" Borderless="true">
+                                <TableHeader ThemeContrast="ThemeContrast.Light">
+                                    <TableRow>
+                                        <TableHeaderCell>LEGEND</TableHeaderCell>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableRowCell>
+                                            <div class="legend-item official-route">
+                                                Offical Route
+                                            </div>
+                                        </TableRowCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableRowCell>
+                                            <div class="legend-item gps-route">
+                                                Submission
+                                            </div>
+                                        </TableRowCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+
+                        </div>
+                    }
                 </div>
+               
             </TabPanel>
             <TabPanel Name="osmap">
                 <div class="white-opaque-box info-area-min-width mobile-scroller">
@@ -52,13 +82,13 @@
                 </div>
             </TabPanel>
             <TabPanel Name="gps">
-                <div style="min-height: calc(100vh - 200px); text-align:center" class="white-opaque-box info-area-min-width mobile-scroller">
+                <div style="min-height: calc(100vh - 180px); text-align:center" class="white-opaque-box info-area-min-width mobile-scroller">
 
                     <h1 id="route-data" class="page-title">Route Data</h1>
 
                     <Divider></Divider>
 
-                    <div style="max-width: 500px;text-align: left; bapadding:5px">
+                    <div style="max-width: 500px;text-align: left; padding:5px">
 
                         <p>
                             There are hundreds of different apps available all using different file types, so you will have to check which file will work in your chosen app before downloading.
@@ -103,7 +133,7 @@
 
 </PageBase>
 
-@code{
+@code {
 
     [Parameter]
     public string RouteId { get; set; } = "0";
@@ -114,6 +144,8 @@
     private readonly string[] _fileTypes = { "fit", "gpx", "kml", "tcx", "geojson" };
 
     string _selectedTab = "online";
+
+    private bool HasRouteId => RouteId != "0";
 
     private void OnSelectedTabChanged(string name)
     {

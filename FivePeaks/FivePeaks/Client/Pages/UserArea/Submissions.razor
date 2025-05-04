@@ -43,14 +43,14 @@
                             @($"{totalTime.Hours}hrs {totalTime.Minutes}m")
                         </div>
                     </td>
-                     <td align="center" style="width:auto" hidden="@(!Helpers.SessionState.AdminLoggedIn)">
-                         <Select TValue="int" SelectedValue="@((int)item.Status)" SelectedValueChanged="(val) => ToggleItemStatus(item, val)">
+                    <td align="center" style="width:auto" hidden="@(!Helpers.SessionState.AdminLoggedIn)">
+                        <Select TValue="int" SelectedValue="@((int)item.Status)" SelectedValueChanged="(val) => ToggleItemStatus(item, val)">
                             <SelectItem Value="@((int) LeaderboardEntryState.Accepted)">Accepted</SelectItem>
                             <SelectItem Value="@((int) LeaderboardEntryState.Pending)">Pending</SelectItem>
                             <SelectItem Value="@((int) LeaderboardEntryState.NeedMoreInfo)">Need Info</SelectItem>
                             <SelectItem Value="@((int) LeaderboardEntryState.Rejected)">Rejected</SelectItem>
                         </Select>
-                     </td>
+                    </td>
                 </tr>
             }
         }
@@ -78,7 +78,7 @@
     }
 </div>
 
-<Modal @ref="_modalRef">
+<Modal @ref="_modalRef" Closing="@(OnModalClose)">
     <ModalBackdrop />
     @if (SelectedItem != null)
     {
@@ -111,7 +111,7 @@
 </Modal>
 
 
-@code{
+@code {
 
 
     [Parameter]
@@ -128,8 +128,6 @@
 
     [Parameter]
     public Action OnFilterChanged { get; set; }
-
-    private string _forceRenderer = DateTime.Now.Ticks.ToString();
 
     LeaderboardItem SelectedItem { get; set; }
 
@@ -151,17 +149,23 @@
 
     private void HideModal()
     {
-        SelectedItem = null;
         _modalRef.Hide();
     }
+
     private void ShowModal()
     {
         _modalRef.Show();
     }
 
+    private void OnModalClose(ModalClosingEventArgs e)
+    {
+        SelectedItem = null;
+    }
+
     private void SelectedEntryForModal(LeaderboardItem item)
     {
         SelectedItem = item;
+        StateHasChanged();
         this.ShowModal();
     }
 
@@ -244,13 +248,13 @@
                     SubmissionsListForView = items.OrderByDescending(i => i.Status == LeaderboardEntryState.Rejected)
                     .ThenByDescending(i => i.Status != LeaderboardEntryState.Accepted)
                     .ThenByDescending(i => i.TrekDate).ToList();
-                break;
+                    break;
 
                 case Leaderboard.LeaderBoardOrderByOption.NeedsInfo:
                     SubmissionsListForView = items.OrderByDescending(i => i.Status == LeaderboardEntryState.NeedMoreInfo)
                     .ThenByDescending(i => i.Status != LeaderboardEntryState.Accepted)
                     .ThenByDescending(i => i.TrekDate).ToList();
-                break;
+                    break;
 
                 default:
                     SubmissionsListForView = items.OrderByDescending(i => i.TrekDate).ToList();
